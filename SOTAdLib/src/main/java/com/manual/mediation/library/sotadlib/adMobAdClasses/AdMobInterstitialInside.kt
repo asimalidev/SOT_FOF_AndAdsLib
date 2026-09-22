@@ -153,9 +153,10 @@ import kotlinx.coroutines.MainScope
 //    }
 //}
 
+
 @SuppressLint("StaticFieldLeak")
 object AdMobInterstitialInside : CoroutineScope by MainScope() {
-    private const val adShowingDelayTime = 300 // Reduced from 1500ms to prevent context loss
+    private const val adShowingDelayTime = 1000
     private var isShowDialog = true
 
     private var mContextAdmob: Context? = null
@@ -165,6 +166,9 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
     private var pendingShowCallback: (() -> Unit)? = null
     private var pendingClosedCallback: (() -> Unit)? = null
     private var isAdLoading = false
+
+    // ✅ ADDED: Boolean to prevent multiple dialogs from stacking
+    private var isWaitDialogShowing = false
 
     fun checkAndLoadAdMobInterstitial(
         context: Context?,
@@ -197,12 +201,17 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
                     isAdLoading = false
                     interstitialAdMobHashMap[nameFragment] = interstitialAd
 
-                    // If user was waiting for the ad, show it now
-                    pendingShowCallback?.let { showCallback ->
-                        showAdmobInterstitial(showCallback, nameFragment)
+                    // ✅ FIXED: Safely grab BOTH callbacks before clearing them
+                    if (pendingShowCallback != null && pendingClosedCallback != null) {
+                        val showCallback = pendingShowCallback!!
+                        val closedCallback = pendingClosedCallback!!
+
                         pendingShowCallback = null
                         pendingClosedCallback = null
-                    } ?: run {
+
+                        // ✅ FIXED: Pass the closedCallback so the app continues after the ad!
+                        showAdmobInterstitial(showCallback, nameFragment, closedCallback)
+                    } else {
                         onAdLoadedCallAdmob?.invoke()
                     }
                 }
@@ -211,7 +220,6 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
                     Log.e("SOT_ADS_TAG", "AdMob Interstitial Failed: $nameFragment. Error: ${loadAdError.message}")
                     isAdLoading = false
 
-                    // If user was waiting, dismiss wait dialog and move to next screen
                     pendingClosedCallback?.let {
                         dismissWaitDialog()
                         it.invoke()
@@ -234,10 +242,10 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
         isShowDialog = true
 
         if (interstitialAdMobHashMap.containsKey(nameFragment)) {
-            // 🟢 Ad is already loaded. Show immediately.
+            // Ad is already loaded. Show immediately.
             showAdmobInterstitial(onAdShowedCallBackAdmob, nameFragment, onAdClosedCallBackAdmob)
         } else {
-            // 🟡 Ad is not ready yet. Show Wait Dialog and hold callbacks.
+            // Ad is not ready yet. Show Wait Dialog and hold callbacks.
             Log.i("SOT_ADS_TAG", "Ad not available. Requesting on-demand and waiting: $nameFragment")
             showWaitDialog()
 
@@ -246,14 +254,13 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
 
             checkAndLoadAdMobInterstitial(context, nameFragment, adId, null)
 
-            // 🔴 5-Second Safety Timeout (Same as your good library)
+            // 5-Second Safety Timeout
             Handler(Looper.getMainLooper()).postDelayed({
                 if (pendingClosedCallback != null) {
                     Log.e("SOT_ADS_TAG", "Ad Load Timeout: $nameFragment")
                     dismissWaitDialog()
                     pendingClosedCallback?.invoke()
 
-                    // Clear pending callbacks so late-loaded ads don't randomly pop up
                     pendingShowCallback = null
                     pendingClosedCallback = null
                 }
@@ -266,7 +273,7 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
         nameFragment: String,
         onAdClosedCallBackAdmob: (() -> Unit)? = null
     ) {
-        showWaitDialog()
+        showWaitDialog() // This is now safe because of our boolean check
         try {
             Handler(Looper.getMainLooper()).postDelayed({
                 dismissWaitDialog()
@@ -277,14 +284,13 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
                         override fun onAdDismissedFullScreenContent() {
                             Log.i("SOT_ADS_TAG", "AdMob Interstitial Dismissed: $nameFragment")
                             onAdClosedCallBackAdmob?.invoke()
-                            pendingClosedCallback?.invoke()
+                            // ✅ FIXED: Removed duplicate pendingClosedCallback invocation here to prevent crashes
                             interstitialAdMobHashMap.remove(nameFragment)
                         }
 
                         override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                            Log.e("SOT_ADS_TAG", "Failed to Show AdMob Interstitial: $nameFragment. Error: ${adError.message}")
+                            Log.e("SOT_ADS_TAG", "Failed to Show AdMob: $nameFragment. Error: ${adError.message}")
                             onAdClosedCallBackAdmob?.invoke()
-                            pendingClosedCallback?.invoke()
                             interstitialAdMobHashMap.remove(nameFragment)
                         }
 
@@ -295,26 +301,28 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
                     }
                 } else {
                     onAdClosedCallBackAdmob?.invoke()
-                    pendingClosedCallback?.invoke()
                 }
             }, adShowingDelayTime.toLong())
         } catch (e: Exception) {
             dismissWaitDialog()
             onAdClosedCallBackAdmob?.invoke()
-            pendingClosedCallback?.invoke()
             Log.e("SOT_ADS_TAG", "Error showing AdMob Interstitial: ${e.message}")
         }
     }
 
+    // ✅ FIXED: Now checks if dialog is already showing before inflating another one
     private fun showWaitDialog() {
-        if (isShowDialog && mContextAdmob is Activity) {
+        if (isShowDialog && mContextAdmob is Activity && !isWaitDialogShowing) {
+            isWaitDialogShowing = true
             val view = (mContextAdmob as Activity).layoutInflater.inflate(R.layout.dialog_adloading, null, false)
             AdLoadingDialog.setContentView(mContextAdmob as Activity, view = view, isCancelable = false).showDialogInterstitial()
         }
     }
 
+    // ✅ FIXED: Resets the boolean when dismissed
     private fun dismissWaitDialog() {
-        if (mContextAdmob is Activity) {
+        if (mContextAdmob is Activity && isWaitDialogShowing) {
+            isWaitDialogShowing = false
             AdLoadingDialog.dismissDialog(mContextAdmob as Activity)
         }
     }
