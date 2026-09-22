@@ -18,14 +18,153 @@ import com.manual.mediation.library.sotadlib.utils.NetworkCheck
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 
+//@SuppressLint("StaticFieldLeak")
+//object AdMobInterstitialInside : CoroutineScope by MainScope() {
+//    private const val adShowingDelayTime = 1500
+//    private var isShowDialog = true
+//
+//    private var mContextAdmob: Context? = null
+//    private var onAdClosedCallBackAdmob: (() -> Unit)? = null
+//    private var onAdLoadedCallBackAdmob: (() -> Unit)? = null
+//
+//    fun checkAndLoadAdMobInterstitial(
+//        context: Context?,
+//        nameFragment: String,
+//        adId: String,
+//        onAdLoadedCallAdmob: (() -> Unit)? = null
+//    ) {
+//        mContextAdmob = context
+//        onAdLoadedCallBackAdmob = onAdLoadedCallAdmob
+//
+//        if (NetworkCheck.isNetworkAvailable(mContextAdmob)) {
+//            if (!interstitialAdMobHashMap.containsKey(nameFragment)) {
+//                loadAdmobInterstitial(nameFragment, adId)
+//            }
+//        } else {
+//            return
+//        }
+//    }
+//
+//    private fun loadAdmobInterstitial(nameFragment: String, adId: String) {
+//        Log.i("SOT_ADS_TAG", "Requesting AdMob Interstitial: $nameFragment")
+//        if (!interstitialAdMobHashMap.containsKey(nameFragment)) {
+//            val adRequestInterstitial = AdRequest.Builder().build()
+//            InterstitialAd.load(
+//                mContextAdmob!!,
+//                adId,
+//                adRequestInterstitial,
+//                object : InterstitialAdLoadCallback() {
+//                    override fun onAdLoaded(interstitialAd: InterstitialAd) {
+//                        Log.i("SOT_ADS_TAG", "AdMob Interstitial Loaded: $nameFragment")
+//                        interstitialAdMobHashMap[nameFragment] = interstitialAd
+//                        onAdLoadedCallBackAdmob?.invoke()
+//                        onAdLoadedCallBackAdmob = null
+//                    }
+//
+//                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+//                        Log.e(
+//                            "SOT_ADS_TAG",
+//                            "AdMob Interstitial Failed to Load: $nameFragment. Error: ${loadAdError.message}"
+//                        )
+//                    }
+//                }
+//            )
+//        }
+//    }
+//
+//    fun showIfAvailableOrLoadAdMobInterstitial(
+//        context: Context?,
+//        nameFragment: String,
+//        adId: String,
+//        onAdClosedCallBackAdmob: () -> Unit,
+//        onAdShowedCallBackAdmob: () -> Unit
+//    ) {
+//        mContextAdmob = context
+//        isShowDialog = true
+//        this.onAdClosedCallBackAdmob = onAdClosedCallBackAdmob
+//
+//        if (interstitialAdMobHashMap.containsKey(nameFragment)) {
+//            showAdmobInterstitial(onAdShowedCallBackAdmob, nameFragment)
+//        } else {
+//            Log.i("SOT_ADS_TAG", "Ad not available. Requesting new ad: $nameFragment")
+//            checkAndLoadAdMobInterstitial(context, nameFragment, adId)
+//            onAdClosedCallBackAdmob.invoke()
+//        }
+//    }
+//
+//    private fun showAdmobInterstitial(onAdShowedCallBackAdmob: () -> Unit, nameFragment: String) {
+//        showWaitDialog()
+//        try {
+//            Handler(Looper.getMainLooper()).postDelayed({
+//                dismissWaitDialog()
+//                val interstitialAd = interstitialAdMobHashMap[nameFragment]
+//                if (interstitialAd != null) {
+//                    interstitialAd.show(mContextAdmob as Activity)
+//                    interstitialAd.fullScreenContentCallback =
+//                        object : FullScreenContentCallback() {
+//                            override fun onAdDismissedFullScreenContent() {
+//                                Log.i("SOT_ADS_TAG", "AdMob Interstitial Dismissed: $nameFragment")
+//                                onAdClosedCallBackAdmob?.invoke()
+//                                interstitialAdMobHashMap.remove(nameFragment)
+//                            }
+//
+//                            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+//                                Log.e(
+//                                    "SOT_ADS_TAG",
+//                                    "Failed to Show AdMob Interstitial: $nameFragment. Error: ${adError.message}"
+//                                )
+//                                onAdClosedCallBackAdmob?.invoke()
+//                                interstitialAdMobHashMap.remove(nameFragment)
+//                            }
+//
+//                            override fun onAdShowedFullScreenContent() {
+//                                Log.i("SOT_ADS_TAG", "AdMob Interstitial Shown: $nameFragment")
+//                                onAdShowedCallBackAdmob.invoke()
+//                            }
+//                        }
+//                } else {
+//                    onAdClosedCallBackAdmob?.invoke()
+//                }
+//            }, adShowingDelayTime.toLong())
+//        } catch (e: Exception) {
+//            dismissWaitDialog()
+//            Log.e("SOT_ADS_TAG", "Error showing AdMob Interstitial: ${e.message}")
+//        }
+//    }
+//
+//    private fun showWaitDialog() {
+//        if (isShowDialog) {
+//            mContextAdmob?.let {
+//                val view = (it as Activity).layoutInflater.inflate(
+//                    R.layout.dialog_adloading,
+//                    null,
+//                    false
+//                )
+//                AdLoadingDialog.setContentView(it, view = view, isCancelable = false)
+//                    .showDialogInterstitial()
+//            }
+//        }
+//    }
+//
+//    private fun dismissWaitDialog() {
+//        mContextAdmob?.let {
+//            AdLoadingDialog.dismissDialog(it as Activity)
+//        }
+//    }
+//}
+
 @SuppressLint("StaticFieldLeak")
 object AdMobInterstitialInside : CoroutineScope by MainScope() {
-    private const val adShowingDelayTime = 1500
+    private const val adShowingDelayTime = 300 // Reduced from 1500ms to prevent context loss
     private var isShowDialog = true
 
     private var mContextAdmob: Context? = null
-    private var onAdClosedCallBackAdmob: (() -> Unit)? = null
-    private var onAdLoadedCallBackAdmob: (() -> Unit)? = null
+    var interstitialAdMobHashMap: HashMap<String, InterstitialAd> = HashMap()
+
+    // Track callbacks for delayed loading
+    private var pendingShowCallback: (() -> Unit)? = null
+    private var pendingClosedCallback: (() -> Unit)? = null
+    private var isAdLoading = false
 
     fun checkAndLoadAdMobInterstitial(
         context: Context?,
@@ -34,42 +173,54 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
         onAdLoadedCallAdmob: (() -> Unit)? = null
     ) {
         mContextAdmob = context
-        onAdLoadedCallBackAdmob = onAdLoadedCallAdmob
-
         if (NetworkCheck.isNetworkAvailable(mContextAdmob)) {
-            if (!interstitialAdMobHashMap.containsKey(nameFragment)) {
-                loadAdmobInterstitial(nameFragment, adId)
+            if (!interstitialAdMobHashMap.containsKey(nameFragment) && !isAdLoading) {
+                loadAdmobInterstitial(nameFragment, adId, onAdLoadedCallAdmob)
+            } else {
+                onAdLoadedCallAdmob?.invoke()
             }
-        } else {
-            return
         }
     }
 
-    private fun loadAdmobInterstitial(nameFragment: String, adId: String) {
+    private fun loadAdmobInterstitial(nameFragment: String, adId: String, onAdLoadedCallAdmob: (() -> Unit)?) {
+        isAdLoading = true
         Log.i("SOT_ADS_TAG", "Requesting AdMob Interstitial: $nameFragment")
-        if (!interstitialAdMobHashMap.containsKey(nameFragment)) {
-            val adRequestInterstitial = AdRequest.Builder().build()
-            InterstitialAd.load(
-                mContextAdmob!!,
-                adId,
-                adRequestInterstitial,
-                object : InterstitialAdLoadCallback() {
-                    override fun onAdLoaded(interstitialAd: InterstitialAd) {
-                        Log.i("SOT_ADS_TAG", "AdMob Interstitial Loaded: $nameFragment")
-                        interstitialAdMobHashMap[nameFragment] = interstitialAd
-                        onAdLoadedCallBackAdmob?.invoke()
-                        onAdLoadedCallBackAdmob = null
-                    }
 
-                    override fun onAdFailedToLoad(loadAdError: LoadAdError) {
-                        Log.e(
-                            "SOT_ADS_TAG",
-                            "AdMob Interstitial Failed to Load: $nameFragment. Error: ${loadAdError.message}"
-                        )
+        val adRequestInterstitial = AdRequest.Builder().build()
+        InterstitialAd.load(
+            mContextAdmob!!,
+            adId,
+            adRequestInterstitial,
+            object : InterstitialAdLoadCallback() {
+                override fun onAdLoaded(interstitialAd: InterstitialAd) {
+                    Log.i("SOT_ADS_TAG", "AdMob Interstitial Loaded: $nameFragment")
+                    isAdLoading = false
+                    interstitialAdMobHashMap[nameFragment] = interstitialAd
+
+                    // If user was waiting for the ad, show it now
+                    pendingShowCallback?.let { showCallback ->
+                        showAdmobInterstitial(showCallback, nameFragment)
+                        pendingShowCallback = null
+                        pendingClosedCallback = null
+                    } ?: run {
+                        onAdLoadedCallAdmob?.invoke()
                     }
                 }
-            )
-        }
+
+                override fun onAdFailedToLoad(loadAdError: LoadAdError) {
+                    Log.e("SOT_ADS_TAG", "AdMob Interstitial Failed: $nameFragment. Error: ${loadAdError.message}")
+                    isAdLoading = false
+
+                    // If user was waiting, dismiss wait dialog and move to next screen
+                    pendingClosedCallback?.let {
+                        dismissWaitDialog()
+                        it.invoke()
+                        pendingShowCallback = null
+                        pendingClosedCallback = null
+                    }
+                }
+            }
+        )
     }
 
     fun showIfAvailableOrLoadAdMobInterstitial(
@@ -81,74 +232,90 @@ object AdMobInterstitialInside : CoroutineScope by MainScope() {
     ) {
         mContextAdmob = context
         isShowDialog = true
-        this.onAdClosedCallBackAdmob = onAdClosedCallBackAdmob
 
         if (interstitialAdMobHashMap.containsKey(nameFragment)) {
-            showAdmobInterstitial(onAdShowedCallBackAdmob, nameFragment)
+            // 🟢 Ad is already loaded. Show immediately.
+            showAdmobInterstitial(onAdShowedCallBackAdmob, nameFragment, onAdClosedCallBackAdmob)
         } else {
-            Log.i("SOT_ADS_TAG", "Ad not available. Requesting new ad: $nameFragment")
-            checkAndLoadAdMobInterstitial(context, nameFragment, adId)
-            onAdClosedCallBackAdmob.invoke()
+            // 🟡 Ad is not ready yet. Show Wait Dialog and hold callbacks.
+            Log.i("SOT_ADS_TAG", "Ad not available. Requesting on-demand and waiting: $nameFragment")
+            showWaitDialog()
+
+            pendingShowCallback = onAdShowedCallBackAdmob
+            pendingClosedCallback = onAdClosedCallBackAdmob
+
+            checkAndLoadAdMobInterstitial(context, nameFragment, adId, null)
+
+            // 🔴 5-Second Safety Timeout (Same as your good library)
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (pendingClosedCallback != null) {
+                    Log.e("SOT_ADS_TAG", "Ad Load Timeout: $nameFragment")
+                    dismissWaitDialog()
+                    pendingClosedCallback?.invoke()
+
+                    // Clear pending callbacks so late-loaded ads don't randomly pop up
+                    pendingShowCallback = null
+                    pendingClosedCallback = null
+                }
+            }, 5000)
         }
     }
 
-    private fun showAdmobInterstitial(onAdShowedCallBackAdmob: () -> Unit, nameFragment: String) {
+    private fun showAdmobInterstitial(
+        onAdShowedCallBackAdmob: () -> Unit,
+        nameFragment: String,
+        onAdClosedCallBackAdmob: (() -> Unit)? = null
+    ) {
         showWaitDialog()
         try {
             Handler(Looper.getMainLooper()).postDelayed({
                 dismissWaitDialog()
                 val interstitialAd = interstitialAdMobHashMap[nameFragment]
-                if (interstitialAd != null) {
+                if (interstitialAd != null && mContextAdmob is Activity) {
                     interstitialAd.show(mContextAdmob as Activity)
-                    interstitialAd.fullScreenContentCallback =
-                        object : FullScreenContentCallback() {
-                            override fun onAdDismissedFullScreenContent() {
-                                Log.i("SOT_ADS_TAG", "AdMob Interstitial Dismissed: $nameFragment")
-                                onAdClosedCallBackAdmob?.invoke()
-                                interstitialAdMobHashMap.remove(nameFragment)
-                            }
-
-                            override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
-                                Log.e(
-                                    "SOT_ADS_TAG",
-                                    "Failed to Show AdMob Interstitial: $nameFragment. Error: ${adError.message}"
-                                )
-                                onAdClosedCallBackAdmob?.invoke()
-                                interstitialAdMobHashMap.remove(nameFragment)
-                            }
-
-                            override fun onAdShowedFullScreenContent() {
-                                Log.i("SOT_ADS_TAG", "AdMob Interstitial Shown: $nameFragment")
-                                onAdShowedCallBackAdmob.invoke()
-                            }
+                    interstitialAd.fullScreenContentCallback = object : FullScreenContentCallback() {
+                        override fun onAdDismissedFullScreenContent() {
+                            Log.i("SOT_ADS_TAG", "AdMob Interstitial Dismissed: $nameFragment")
+                            onAdClosedCallBackAdmob?.invoke()
+                            pendingClosedCallback?.invoke()
+                            interstitialAdMobHashMap.remove(nameFragment)
                         }
+
+                        override fun onAdFailedToShowFullScreenContent(adError: com.google.android.gms.ads.AdError) {
+                            Log.e("SOT_ADS_TAG", "Failed to Show AdMob Interstitial: $nameFragment. Error: ${adError.message}")
+                            onAdClosedCallBackAdmob?.invoke()
+                            pendingClosedCallback?.invoke()
+                            interstitialAdMobHashMap.remove(nameFragment)
+                        }
+
+                        override fun onAdShowedFullScreenContent() {
+                            Log.i("SOT_ADS_TAG", "AdMob Interstitial Shown: $nameFragment")
+                            onAdShowedCallBackAdmob.invoke()
+                        }
+                    }
                 } else {
                     onAdClosedCallBackAdmob?.invoke()
+                    pendingClosedCallback?.invoke()
                 }
             }, adShowingDelayTime.toLong())
         } catch (e: Exception) {
             dismissWaitDialog()
+            onAdClosedCallBackAdmob?.invoke()
+            pendingClosedCallback?.invoke()
             Log.e("SOT_ADS_TAG", "Error showing AdMob Interstitial: ${e.message}")
         }
     }
 
     private fun showWaitDialog() {
-        if (isShowDialog) {
-            mContextAdmob?.let {
-                val view = (it as Activity).layoutInflater.inflate(
-                    R.layout.dialog_adloading,
-                    null,
-                    false
-                )
-                AdLoadingDialog.setContentView(it, view = view, isCancelable = false)
-                    .showDialogInterstitial()
-            }
+        if (isShowDialog && mContextAdmob is Activity) {
+            val view = (mContextAdmob as Activity).layoutInflater.inflate(R.layout.dialog_adloading, null, false)
+            AdLoadingDialog.setContentView(mContextAdmob as Activity, view = view, isCancelable = false).showDialogInterstitial()
         }
     }
 
     private fun dismissWaitDialog() {
-        mContextAdmob?.let {
-            AdLoadingDialog.dismissDialog(it as Activity)
+        if (mContextAdmob is Activity) {
+            AdLoadingDialog.dismissDialog(mContextAdmob as Activity)
         }
     }
 }

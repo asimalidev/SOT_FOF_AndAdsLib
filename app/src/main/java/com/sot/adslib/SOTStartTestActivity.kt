@@ -81,11 +81,11 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
 
         val consentConfig = ConsentConfigurations.Builder()
             .setApplicationContext(application)
-            .setMintegralInitializationId(
-                appId = "144002",
-                appKey = "7c22942b749fe6a6e361b675e96b3ee9"
-            )
-            .setUnityInitializationId(gameId = "1234567", testMode = true)
+//            .setMintegralInitializationId(
+//                appId = "144002",
+//                appKey = "7c22942b749fe6a6e361b675e96b3ee9"
+//            )
+//            .setUnityInitializationId(gameId = "1234567", testMode = true)
             .setActivityContext(this)
             .setTestDeviceHashedIdList(
                 arrayListOf(
