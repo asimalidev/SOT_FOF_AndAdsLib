@@ -2,14 +2,12 @@ package com.manual.mediation.library.sotadlib.activities
 
 import android.app.ActivityOptions
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.cardview.widget.CardView
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.manual.mediation.library.sotadlib.R
@@ -29,9 +27,8 @@ class LanguageScreenOne : AppCompatBaseActivity(), LanguageInterface {
     private lateinit var languageAdapter: LanguageAdapter
     private lateinit var recyclerView: RecyclerView
     private var sotAdsConfigurations: SOTAdsConfigurations? = null
-    private var tracker:CommonEventTracker? = null
-    private  var  comeFrom: String? = null
-
+    private var tracker: CommonEventTracker? = null
+    private var comeFrom: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +38,6 @@ class LanguageScreenOne : AppCompatBaseActivity(), LanguageInterface {
         hideSystemUIUpdated()
         setContentView(R.layout.language_screen_one)
         comeFrom = intent.getStringExtra("comeFrom")
-       // accurateActivityName = intent.getStringExtra("accurateActivityName")
         Log.d("comeFrom", "comeFromLanguage1:${intent.getStringExtra("comeFrom")} ")
         tracker?.logEvent(
             this,
@@ -67,7 +63,6 @@ class LanguageScreenOne : AppCompatBaseActivity(), LanguageInterface {
             config.theme?.let {
                 val rootView = findViewById<View>(R.id.root_view)
                 rootView.setBackgroundColor(it)
-               // STATUS_BAR_COLOR = it
             }
             config.statusBarColor?.let {
                 setStatusBarColor(it)
@@ -82,26 +77,23 @@ class LanguageScreenOne : AppCompatBaseActivity(), LanguageInterface {
                             selectedDrawable = config.selectedDrawable!!,
                             unSelectedDrawable = config.unSelectedDrawable!!,
                             selectedRadio = config.selectedRadio!!,
-                            unSelectedRadio = config.unSelectedRadio!!, onItemClickListener = {
+                            unSelectedRadio = config.unSelectedRadio!!,
+                            onItemClickListener = {
                                 tracker?.logEvent(
                                     this,
                                     "language1_scr_tap_language"
                                 )
                                 config.showLanguageTwoScreen()
-                            }, fontColor = config.fontColor!!)
-
+                            },
+                            fontColor = config.fontColor!!
+                        )
 
                         recyclerView.adapter = languageAdapter
                     }
                 }
             }
         }
-
-
     }
-
-
-
 
     override fun showLanguageTwoScreen() {
         if (!isFinishing && !isDestroyed) {
@@ -109,18 +101,17 @@ class LanguageScreenOne : AppCompatBaseActivity(), LanguageInterface {
                 val intent = Intent(this, LanguageScreenDup::class.java)
                 if (intent.resolveActivity(packageManager) != null) {
                     Log.d("comeFrom", "comeFrom:$comeFrom ")
-                    if (comeFrom!=null){
-                        intent.putExtra("comeFrom",comeFrom)
-                       startActivity(
+                    if (comeFrom != null) {
+                        intent.putExtra("comeFrom", comeFrom)
+                        startActivity(
                             intent,
                             ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle()
                         )
                         finish()
-                    }else{
+                    } else {
                         startActivity(intent, ActivityOptions.makeCustomAnimation(this, 0, 0).toBundle())
                         finish()
                     }
-
                 } else {
                     Log.e("LanguageScreenOne", "No activity found to handle intent")
                 }
@@ -132,34 +123,29 @@ class LanguageScreenOne : AppCompatBaseActivity(), LanguageInterface {
 
     override fun onResume() {
         super.onResume()
-        val nativeLanguage1Enabled = (sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_LANGUAGE_1") as? Boolean ?: false) &&
-                (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)
-
-        (sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_LANGUAGE_1") as? Boolean ?: false) &&
-                (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") == false)
+        val nativeLanguage1Enabled = sotAdsConfigurations?.isNativeAdEnabled("NATIVE_LANGUAGE_1") == true
         if (nativeLanguage1Enabled) {
             showAdmobLanguageScreenOneNatives()
         } else {
-            findViewById<CardView>(R.id.nativeAdContainerAd)?.let {
-                findViewById<CardView>(R.id.nativeAdContainerAd)?.visibility = View.GONE
-            }
+            findViewById<CardView>(R.id.nativeAdContainerAd)?.visibility = View.GONE
         }
     }
 
-    private fun showAdmobLanguageScreenOneNatives(){
-        sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_LANGUAGE_1")?.let { adId ->
+    private fun showAdmobLanguageScreenOneNatives() {
+        sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_LANGUAGE_1")?.let { adId ->
             AdmobNativeAdManager.requestAd(
                 mContext = this,
                 adId = adId,
                 adName = "NATIVE_LANGUAGE_1",
                 isMedia = true,
                 isMediumAd = true,
-                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.getValue("NATIVE_LANGUAGE_1").toString().toBoolean(),
+                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_LANGUAGE_1") ?: true,
+                nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_LANGUAGE_1"),
                 populateView = true,
-                requestAgain =false,
+                requestAgain = false,
                 adContainer = findViewById(R.id.nativeAdContainerAd),
                 onAdFailed = {
-                    findViewById<CardView>(R.id.nativeAdContainerAd).visibility = View.GONE
+                    findViewById<CardView>(R.id.nativeAdContainerAd)?.visibility = View.GONE
                     Log.i("LanguageScreenOne", "Language: onAdFailed()")
                 },
                 onAdLoaded = {
@@ -172,6 +158,4 @@ class LanguageScreenOne : AppCompatBaseActivity(), LanguageInterface {
             )
         } ?: Log.w("LanguageScreenOne", "ADMOB_NATIVE_LANGUAGE_1 ad ID is missing.")
     }
-
-
 }

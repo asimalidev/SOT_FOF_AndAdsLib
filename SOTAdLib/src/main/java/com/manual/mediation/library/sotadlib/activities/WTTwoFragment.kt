@@ -3,24 +3,22 @@ package com.manual.mediation.library.sotadlib.activities
 import android.annotation.SuppressLint
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.manual.mediation.library.sotadlib.R
-import com.manual.mediation.library.sotadlib.activities.WTOneFragment.Companion
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobNativeAdManager
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsConfigurations
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsManager
 import com.manual.mediation.library.sotadlib.data.WalkThroughItem
 import com.manual.mediation.library.sotadlib.databinding.FragmentWTTwoBinding
 import com.manual.mediation.library.sotadlib.interfaces.CommonEventTracker
-
 import com.manual.mediation.library.sotadlib.utils.NetworkCheck
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,31 +29,29 @@ class WTTwoFragment : Fragment() {
     private var sotAdsConfigurations: SOTAdsConfigurations? = null
     private lateinit var item: WalkThroughItem
     private var eventTracker: CommonEventTracker? = null
-    private var scaleType :Int = 0
+    private var scaleType: Int = 0
     private var blurVisibility: Boolean = false
+
     companion object {
         private const val ARG_ITEM = "walkThroughItem"
 
-        fun newInstance(item: WalkThroughItem,tracker: CommonEventTracker? = null): WTTwoFragment {
+        fun newInstance(item: WalkThroughItem, tracker: CommonEventTracker? = null): WTTwoFragment {
             val fragment = WTTwoFragment()
-
-                val args = Bundle().apply {
-                    putParcelable(ARG_ITEM, item)
-                }
-                fragment.arguments = args
-                fragment.eventTracker = tracker
-                return fragment
+            val args = Bundle().apply {
+                putParcelable(ARG_ITEM, item)
             }
+            fragment.arguments = args
+            fragment.eventTracker = tracker
+            return fragment
         }
-
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         item = arguments?.getParcelable(ARG_ITEM) ?: throw IllegalStateException("WalkThroughItem must be provided")
-        scaleType =item.imageScale
+        scaleType = item.imageScale
         blurVisibility = item.blurVisibility
     }
-
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         binding = FragmentWTTwoBinding.inflate(inflater, container, false)
@@ -64,11 +60,10 @@ class WTTwoFragment : Fragment() {
             "walkthrough2_scr"
         )
         binding.blure.visibility = if (blurVisibility) View.VISIBLE else View.GONE
-        if (scaleType == 0){
+        if (scaleType == 0) {
             binding.main.visibility = View.GONE
             binding.mainCopy.visibility = View.VISIBLE
-        }
-        else{
+        } else {
             binding.main.visibility = View.VISIBLE
             binding.mainCopy.visibility = View.GONE
         }
@@ -91,7 +86,6 @@ class WTTwoFragment : Fragment() {
                 binding.main
             }
 
-            // Load image into the visible ImageView
             withContext(Dispatchers.Main) {
                 Glide.with(requireActivity())
                     .load(item.drawableResId)
@@ -111,14 +105,14 @@ class WTTwoFragment : Fragment() {
             }
         }
 
-        binding.txtHeading.setTextColor(ContextCompat.getColor(requireContext(),item.headingColor))
-        binding.txtDescription.setTextColor(ContextCompat.getColor(requireContext(),item.descriptionColor))
-        binding.btnNext.setTextColor(ContextCompat.getColor(requireContext(),item.nextColor))
+        binding.txtHeading.setTextColor(ContextCompat.getColor(requireContext(), item.headingColor))
+        binding.txtDescription.setTextColor(ContextCompat.getColor(requireContext(), item.descriptionColor))
+        binding.btnNext.setTextColor(ContextCompat.getColor(requireContext(), item.nextColor))
         binding.btnNext.background = resources.getDrawable(item.nextBackground)
         binding.txtHeading.text = item.heading
         binding.txtDescription.text = item.description
 
-        binding.root.setBackgroundColor(ContextCompat.getColor(requireContext(),item.viewBackgroundColor))
+        binding.root.setBackgroundColor(ContextCompat.getColor(requireContext(), item.viewBackgroundColor))
 
         if (!NetworkCheck.isNetworkAvailable(context)) {
             binding.glOne.setGuidelinePercent(0.8f)
@@ -133,8 +127,7 @@ class WTTwoFragment : Fragment() {
             viewPager?.currentItem = 2
         }
 
-        val nativeWalkThrough3Enabled = (sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_3") as? Boolean ?: false)  && (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)
-        if (nativeWalkThrough3Enabled) {
+        if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_3") == true) {
             loadAdmobWTThreeNatives()
         }
     }
@@ -146,8 +139,7 @@ class WTTwoFragment : Fragment() {
             binding.nativeAdContainerAd.visibility = View.GONE
         }
 
-        val nativeWalkThrough1Enabled = (sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_2") as? Boolean ?: false)  && (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)
-        if (nativeWalkThrough1Enabled) {
+        if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_2") == true) {
             binding.nativeAdContainerAd.visibility = View.VISIBLE
             showAdmobWTTwoNatives()
         } else {
@@ -156,28 +148,30 @@ class WTTwoFragment : Fragment() {
     }
 
     private fun loadAdmobWTThreeNatives() {
-        sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_WALKTHROUGH_3")?.let { adId ->
+        sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_WALKTHROUGH_3")?.let { adId ->
             AdmobNativeAdManager.requestAd(
                 mContext = requireActivity(),
                 adId = adId,
                 adName = "WALKTHROUGH_3",
                 isMedia = true,
                 isMediumAd = true,
+                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_3") ?: true,
+                nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_WALKTHROUGH_3"),
                 populateView = false
             )
-        } ?: Log.i("WTTwoFragment","ADMOB_NATIVE_WALKTHROUGH_3 ad ID is missing.")
+        } ?: Log.i("WTTwoFragment", "ADMOB_NATIVE_WALKTHROUGH_3 ad ID is missing.")
     }
 
-
     private fun showAdmobWTTwoNatives() {
-        sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_WALKTHROUGH_2")?.let { adId ->
+        sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_WALKTHROUGH_2")?.let { adId ->
             AdmobNativeAdManager.requestAd(
                 mContext = requireActivity(),
                 adId = adId,
                 adName = "WALKTHROUGH_2",
                 isMedia = true,
                 isMediumAd = true,
-                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.getValue("NATIVE_WALKTHROUGH_2").toString().toBoolean(),
+                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_2") ?: true,
+                nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_WALKTHROUGH_2"),
                 populateView = true,
                 requestAgain = false,
                 adContainer = binding.nativeAdContainerAd,
@@ -190,7 +184,6 @@ class WTTwoFragment : Fragment() {
                     Log.i("SOT_ADS_TAG", "WALKTHROUGH_2: Admob: onAdLoaded()")
                 }
             )
-        } ?: Log.w("WTOneFragment", "ADMOB_NATIVE_WALKTHROUGH_2 ad ID is missing.")
+        } ?: Log.w("WTTwoFragment", "ADMOB_NATIVE_WALKTHROUGH_2 ad ID is missing.")
     }
-  
 }

@@ -82,7 +82,7 @@ class WTFullScreenAdFragment : Fragment() {
         }
 
         val nativeWalkThroughFullScrEnabled =
-            sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_FULLSCR") as? Boolean ?: false
+            sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_FULLSCR") ?: false
         if (nativeWalkThroughFullScrEnabled) {
             binding.shimmerLayoutF.root.visibility = View.VISIBLE
             showAdmobWTFullNatives()
@@ -92,13 +92,13 @@ class WTFullScreenAdFragment : Fragment() {
     }
 
     private fun showAdmobWTFullNatives() {
-        sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_WALKTHROUGH_FULLSCR")
+        sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_WALKTHROUGH_FULLSCR")
             ?.let { adId ->
                 AdmobNativeAdFullScreen.requestAd(
                     mContext = requireActivity(),
                     adId = adId,
                     adName = "WALKTHROUGH_FULL_SCREEN",
-                    remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.getValue("NATIVE_WALKTHROUGH_FULLSCR").toString().toBoolean(),
+                    remoteConfig = sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_FULLSCR") ?: false,
                     populateView = true,
                     adContainer = binding.nativeAdContainer,
                     onAdFailed = {

@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.sot.adslib"
-        minSdk 23
+        minSdk 24
         targetSdk 36
         versionCode 1
         versionName "1.0"
@@ -48,4 +48,9 @@ dependencies {
     androidTestImplementation libs.androidx.espresso.core
 
     implementation libs.shimmer
+}
+
+configurations.configureEach {
+    exclude group: "com.google.android.gms", module: "play-services-ads"
+    exclude group: "com.google.android.gms", module: "play-services-ads-lite"
 }

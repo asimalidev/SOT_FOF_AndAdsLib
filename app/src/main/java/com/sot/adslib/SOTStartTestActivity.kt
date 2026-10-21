@@ -19,6 +19,7 @@ import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.content.ContextCompat
 import com.manual.mediation.library.sotadlib.activities.AppCompatBaseActivity
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdMobBannerAdSplash
+import com.manual.mediation.library.sotadlib.adMobAdClasses.SplashBannerType
 import com.manual.mediation.library.sotadlib.callingClasses.LanguageScreensConfiguration
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsConfigurations
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsManager
@@ -41,6 +42,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
     private lateinit var sotAdsConfigurations: SOTAdsConfigurations
     private var firstOpenFlowAdIds: HashMap<String, String> = HashMap()
     private var isDuplicateScreenStarted = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivitySotstartTestBinding.inflate(layoutInflater)
@@ -54,7 +56,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
         firstOpenFlowAdIds.apply {
             this["ADMOB_SPLASH_INTERSTITIAL"] = "ca-app-pub-3940256099942544/1033173712"
             this["ADMOB_SPLASH_RESUME"] = "ca-app-pub-3940256099942544/9257395921"
-            this["ADMOB_BANNER_SPLASH"] = "ca-app-pub-3940256099942544/2247696110"
+            this["ADMOB_BANNER_SPLASH"] = "ca-app-pub-3940256099942544/9214589741"
             this["ADMOB_NATIVE_LANGUAGE_1"] = "ca-app-pub-3940256099942544/2247696110"
             this["ADMOB_NATIVE_LANGUAGE_2"] = "ca-app-pub-3940256099942544/2247696110"
             this["ADMOB_NATIVE_SURVEY_1"] = "ca-app-pub-3940256099942544/2247696110"
@@ -64,7 +66,6 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
             this["ADMOB_NATIVE_WALKTHROUGH_FULLSCR"] = "ca-app-pub-3940256099942544/2247696110"
             this["ADMOB_NATIVE_WALKTHROUGH_3"] = "ca-app-pub-3940256099942544/2247696110"
             this["ADMOB_INTERSTITIAL_LETS_START"] = "ca-app-pub-3940256099942544/1033173712"
-
         }
 
         SOTAdsManager.setOnFlowStateListener(
@@ -81,11 +82,11 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
 
         val consentConfig = ConsentConfigurations.Builder()
             .setApplicationContext(application)
-//            .setMintegralInitializationId(
-//                appId = "144002",
-//                appKey = "7c22942b749fe6a6e361b675e96b3ee9"
-//            )
-//            .setUnityInitializationId(gameId = "1234567", testMode = true)
+            .setMintegralInitializationId(
+                appId = "144002",
+                appKey = "7c22942b749fe6a6e361b675e96b3ee9"
+            )
+            .setPangleInitializationId(appId = "8025677")
             .setActivityContext(this)
             .setTestDeviceHashedIdList(
                 arrayListOf(
@@ -95,19 +96,19 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                     "CB2F3812ACAA2A3D8C0B31682E1473EB",
                     "F02B044F22C917805C3DF6E99D3B8800",
                     "FF98A451C9A8BB057CA62040BCB32743"
-                           )
+                )
             )
             .setOnConsentGatheredCallback {
                 Log.i("ConsentMessage", "SOTStartActivity: setOnConsentGatheredCallback")
                 fetchAdIDS(
-                    remoteConfigOperationsCompleted = {
-                            remoteData ->
-
+                    remoteConfigOperationsCompleted = { remoteData ->
                         if (NetworkCheck.isNetworkAvailable(this)) {
-                            if (remoteData.getValue(RemoteConfigConstTest.BANNER_SPLASH) == true) {
+                            val bannerConfig = remoteData[RemoteConfigConstTest.BANNER_SPLASH_TYPE]
+                                ?: remoteData[RemoteConfigConstTest.BANNER_SPLASH]
+                            val resolvedBannerType = SplashBannerType.fromRemoteValue(bannerConfig)
+                            if (resolvedBannerType != SplashBannerType.OFF) {
                                 binding.bannerAd.visibility = View.VISIBLE
-
-                                loadAdmobBannerAd(remoteData)
+                                loadAdmobBannerAd(remoteData, resolvedBannerType)
                             } else {
                                 /**If banner is OFF in remote config, start heavy ads immediately**/
                                 startHeavyAdsFlow(remoteData)
@@ -144,7 +145,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                     this,
                     com.manual.mediation.library.sotadlib.R.drawable.ic_radio_button_unchecked
                 )!!,
-                tickSelector =AppCompatResources.getDrawable(
+                tickSelector = AppCompatResources.getDrawable(
                     this,
                     com.manual.mediation.library.sotadlib.R.drawable.done_btn
                 )!!,
@@ -185,12 +186,13 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
-    private fun loadAdmobBannerAd(remoteData: HashMap<String, Any>) {
+    private fun loadAdmobBannerAd(remoteData: HashMap<String, Any>, bannerType: Any?) {
         AdMobBannerAdSplash(
             activity = this@SOTStartTestActivity,
-            placementID = "ca-app-pub-3940256099942544/9214589741",
+            placementID = firstOpenFlowAdIds["ADMOB_BANNER_SPLASH"] ?: "ca-app-pub-3940256099942544/9214589741",
             bannerContainer = binding.bannerAd,
             shimmerContainer = binding.bannerShimmerLayout.root,
+            bannerType = bannerType,
             onAdFailed = {
                 Log.i("SOT_ADS_TAG", "Banner Failed. Starting Interstitial/Native Flow.")
                 binding.bannerAd.visibility = View.GONE
@@ -209,15 +211,14 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
         )
     }
 
-
     @RequiresApi(Build.VERSION_CODES.N)
     private fun startHeavyAdsFlow(remoteData: HashMap<String, Any>) {
-
         sotAdsConfigurations.setRemoteConfigData(
             activityContext = this@SOTStartTestActivity,
             myRemoteConfigData = remoteData
         )
     }
+
     private fun gotoMainActivity() {
         val time = if (PrefHelper(this).getBooleanDefault("StartScreens", default = false)) {
             0
@@ -269,18 +270,11 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
 
         txtWallpapers.setOnClickListener {
             Log.i("SOTStartTestActivity", "survey_scr_check_wallpaper")
-
-
             if (isDuplicateScreenStarted) {
                 SOTAdsManager.showWelcomeDupScreen()
             }
-
             isDuplicateScreenStarted = false
-            if (txtWallpapersBool) {
-                txtWallpapersBool = false
-            } else {
-                txtWallpapersBool = true
-            }
+            txtWallpapersBool = !txtWallpapersBool
         }
         txtEditor.setOnClickListener {
             Log.i("SOTStartTestActivity", "survey_scr_check_urdu_editor")
@@ -288,11 +282,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 SOTAdsManager.showWelcomeDupScreen()
             }
             isDuplicateScreenStarted = false
-            if (txtEditorBool) {
-                txtEditorBool = false
-            } else {
-                txtEditorBool = true
-            }
+            txtEditorBool = !txtEditorBool
         }
         txtLiveThemes.setOnClickListener {
             Log.i("SOTStartTestActivity", "survey_scr_check_live_themes")
@@ -300,11 +290,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 SOTAdsManager.showWelcomeDupScreen()
             }
             isDuplicateScreenStarted = false
-            if (txtLiveThemesBool) {
-                txtLiveThemesBool = false
-            } else {
-                txtLiveThemesBool = true
-            }
+            txtLiveThemesBool = !txtLiveThemesBool
         }
         txtPhotoOnKeyboard.setOnClickListener {
             Log.i("SOTStartTestActivity", "survey_scr_check_photo_on_keyboard")
@@ -312,11 +298,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 SOTAdsManager.showWelcomeDupScreen()
             }
             isDuplicateScreenStarted = false
-            if (txtPhotoOnKeyboardBool) {
-                txtPhotoOnKeyboardBool = false
-            } else {
-                txtPhotoOnKeyboardBool = true
-            }
+            txtPhotoOnKeyboardBool = !txtPhotoOnKeyboardBool
         }
         txtPhotoTranslator.setOnClickListener {
             Log.i("SOTStartTestActivity", "survey_scr_check_photo_translator")
@@ -324,11 +306,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 SOTAdsManager.showWelcomeDupScreen()
             }
             isDuplicateScreenStarted = false
-            if (txtPhotoTranslatorBool) {
-                txtPhotoTranslatorBool = false
-            } else {
-                txtPhotoTranslatorBool = true
-            }
+            txtPhotoTranslatorBool = !txtPhotoTranslatorBool
         }
         txtInstantSticker.setOnClickListener {
             Log.i("SOTStartTestActivity", "survey_scr_check_instant_stickers")
@@ -336,11 +314,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 SOTAdsManager.showWelcomeDupScreen()
             }
             isDuplicateScreenStarted = false
-            if (txtInstantStickerBool) {
-                txtInstantStickerBool = false
-            } else {
-                txtInstantStickerBool = true
-            }
+            txtInstantStickerBool = !txtInstantStickerBool
         }
         txtLiveTranslator.setOnClickListener {
             Log.i("SOTStartTestActivity", "survey_scr_check_live_translator")
@@ -348,11 +322,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 SOTAdsManager.showWelcomeDupScreen()
             }
             isDuplicateScreenStarted = false
-            if (txtLiveTranslatorBool) {
-                txtLiveTranslatorBool = false
-            } else {
-                txtLiveTranslatorBool = true
-            }
+            txtLiveTranslatorBool = !txtLiveTranslatorBool
         }
         txtUrduSticker.setOnClickListener {
             Log.i("SOTStartTestActivity", "survey_scr_check_urdu_stickers")
@@ -360,11 +330,7 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 SOTAdsManager.showWelcomeDupScreen()
             }
             isDuplicateScreenStarted = false
-            if (txtUrduStickerBool) {
-                txtUrduStickerBool = false
-            } else {
-                txtUrduStickerBool = true
-            }
+            txtUrduStickerBool = !txtUrduStickerBool
         }
 
         nextButton.setOnClickListener {
@@ -390,7 +356,6 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
         }
         return welcomeScreenView
     }
-
 
     private fun getWalkThroughList(context: Context): ArrayList<WalkThroughItem> {
         val localizedContext = ContextWrapper(context).createConfigurationContext(
@@ -437,8 +402,6 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
         )
     }
 
-
-
     private fun fetchAdIDS(remoteConfigOperationsCompleted: (HashMap<String, Any>) -> Unit) {
         if (NetworkCheck.isNetworkAvailable(this@SOTStartTestActivity)) {
             saveAllValues()
@@ -453,16 +416,26 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
         // SOT-Ads-Visibility-Config
         //editor.putString(RemoteConfigConstTest.RESUME_INTER_SPLASH, "INTERSTITIAL")
         editor.putString(RemoteConfigConstTest.RESUME_INTER_SPLASH, "RESUME")
+        // Splash banner can be Boolean (true/false) OR String ("SMALL", "LARGE", "COLLAPSIBLE", "OFF")
         editor.putBoolean(RemoteConfigConstTest.BANNER_SPLASH, true)
+        editor.putString(RemoteConfigConstTest.BANNER_SPLASH_TYPE, "SMALL")
         editor.putBoolean(RemoteConfigConstTest.RESUME_OVERALL, true)
+        // Native ads can be Boolean (true/false) OR String ("SMALL", "MEDIUM", "LARGE", "OFF")
         editor.putBoolean(RemoteConfigConstTest.NATIVE_LANGUAGE_1, true)
-        editor.putBoolean(RemoteConfigConstTest.NATIVE_LANGUAGE_2, true )
+        editor.putString(RemoteConfigConstTest.NATIVE_LANGUAGE_1_SIZE, "LARGE")
+        editor.putBoolean(RemoteConfigConstTest.NATIVE_LANGUAGE_2, true)
+        editor.putString(RemoteConfigConstTest.NATIVE_LANGUAGE_2_SIZE, "LARGE")
         editor.putBoolean(RemoteConfigConstTest.NATIVE_SURVEY_1, true)
+        editor.putString(RemoteConfigConstTest.NATIVE_SURVEY_1_SIZE, "LARGE")
         editor.putBoolean(RemoteConfigConstTest.NATIVE_SURVEY_2, true)
+        editor.putString(RemoteConfigConstTest.NATIVE_SURVEY_2_SIZE, "LARGE")
         editor.putBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_1, true)
+        editor.putString(RemoteConfigConstTest.NATIVE_WALKTHROUGH_1_SIZE, "LARGE")
         editor.putBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_2, true)
+        editor.putString(RemoteConfigConstTest.NATIVE_WALKTHROUGH_2_SIZE, "LARGE")
         editor.putBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_FULLSCR, true)
         editor.putBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_3, true)
+        editor.putString(RemoteConfigConstTest.NATIVE_WALKTHROUGH_3_SIZE, "LARGE")
         editor.putBoolean(RemoteConfigConstTest.INTERSTITIAL_LETS_START, true)
         editor.putString(RemoteConfigConstTest.TIMER_NATIVE_F_SRC, "5")
         editor.putString(RemoteConfigConstTest.DELAY_TO_SHOW_LANGUAGE_DONE, "2000")
@@ -479,21 +452,37 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
             this["RESUME_INTER_SPLASH"] =
                 "${prefs.getString(RemoteConfigConstTest.RESUME_INTER_SPLASH, "Empty")}"
             this["BANNER_SPLASH"] = prefs.getBoolean(RemoteConfigConstTest.BANNER_SPLASH, false)
+            this["BANNER_SPLASH_TYPE"] =
+                "${prefs.getString(RemoteConfigConstTest.BANNER_SPLASH_TYPE, "SMALL")}"
             this["RESUME_OVERALL"] = prefs.getBoolean(RemoteConfigConstTest.RESUME_OVERALL, false)
             this["NATIVE_LANGUAGE_1"] =
                 prefs.getBoolean(RemoteConfigConstTest.NATIVE_LANGUAGE_1, false)
+            this["NATIVE_LANGUAGE_1_SIZE"] =
+                "${prefs.getString(RemoteConfigConstTest.NATIVE_LANGUAGE_1_SIZE, "LARGE")}"
             this["NATIVE_LANGUAGE_2"] =
                 prefs.getBoolean(RemoteConfigConstTest.NATIVE_LANGUAGE_2, false)
+            this["NATIVE_LANGUAGE_2_SIZE"] =
+                "${prefs.getString(RemoteConfigConstTest.NATIVE_LANGUAGE_2_SIZE, "LARGE")}"
             this["NATIVE_SURVEY_1"] = prefs.getBoolean(RemoteConfigConstTest.NATIVE_SURVEY_1, false)
+            this["NATIVE_SURVEY_1_SIZE"] =
+                "${prefs.getString(RemoteConfigConstTest.NATIVE_SURVEY_1_SIZE, "LARGE")}"
             this["NATIVE_SURVEY_2"] = prefs.getBoolean(RemoteConfigConstTest.NATIVE_SURVEY_2, false)
+            this["NATIVE_SURVEY_2_SIZE"] =
+                "${prefs.getString(RemoteConfigConstTest.NATIVE_SURVEY_2_SIZE, "LARGE")}"
             this["NATIVE_WALKTHROUGH_1"] =
                 prefs.getBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_1, false)
+            this["NATIVE_WALKTHROUGH_1_SIZE"] =
+                "${prefs.getString(RemoteConfigConstTest.NATIVE_WALKTHROUGH_1_SIZE, "LARGE")}"
             this["NATIVE_WALKTHROUGH_2"] =
                 prefs.getBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_2, false)
+            this["NATIVE_WALKTHROUGH_2_SIZE"] =
+                "${prefs.getString(RemoteConfigConstTest.NATIVE_WALKTHROUGH_2_SIZE, "LARGE")}"
             this["NATIVE_WALKTHROUGH_FULLSCR"] =
                 prefs.getBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_FULLSCR, false)
             this["NATIVE_WALKTHROUGH_3"] =
                 prefs.getBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_3, false)
+            this["NATIVE_WALKTHROUGH_3_SIZE"] =
+                "${prefs.getString(RemoteConfigConstTest.NATIVE_WALKTHROUGH_3_SIZE, "LARGE")}"
             this["INTERSTITIAL_LETS_START"] =
                 prefs.getBoolean(RemoteConfigConstTest.INTERSTITIAL_LETS_START, false)
             this["TIMER_NATIVE_F_SRC"] =
@@ -502,8 +491,6 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 "${prefs.getString(RemoteConfigConstTest.DELAY_TO_SHOW_LANGUAGE_DONE, "Empty")}"
             this["IS_PURCHASED"] =
                 prefs.getBoolean(RemoteConfigConstTest.IS_PURCHASED, false)
-
-
         }
         return remoteConfigHashMap
     }

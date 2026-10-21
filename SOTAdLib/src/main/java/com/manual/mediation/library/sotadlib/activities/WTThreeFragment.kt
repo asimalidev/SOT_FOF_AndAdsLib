@@ -22,7 +22,6 @@ import com.manual.mediation.library.sotadlib.interfaces.CommonEventTracker
 import com.manual.mediation.library.sotadlib.utils.NetworkCheck
 import com.manual.mediation.library.sotadlib.utils.PrefHelper
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -87,8 +86,8 @@ class WTThreeFragment : Fragment() {
         val interstitialLetsStartEnabled =
             (sotAdsConfigurations?.getRemoteConfigData()?.get("INTERSTITIAL_LETS_START") as? Boolean
                 ?: false) &&
-                    (sotAdsConfigurations?.getRemoteConfigData()
-                        ?.get("IS_PURCHASED") as? Boolean == false)
+                (sotAdsConfigurations?.getRemoteConfigData()
+                    ?.get("IS_PURCHASED") as? Boolean == false)
 
         if (interstitialLetsStartEnabled) {
             loadAdmobWTThreeInterstitial()
@@ -103,7 +102,6 @@ class WTThreeFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             withContext(Dispatchers.Main) {
                 context?.let {
-
                     val targetImageView = if (scaleType == 0) {
                         binding.main.visibility = View.GONE
                         binding.mainCopy.visibility = View.VISIBLE
@@ -114,7 +112,6 @@ class WTThreeFragment : Fragment() {
                         binding.main
                     }
 
-                    // Load image into the visible ImageView
                     withContext(Dispatchers.Main) {
                         Glide.with(requireActivity())
                             .load(item.drawableResId)
@@ -122,7 +119,6 @@ class WTThreeFragment : Fragment() {
                             .skipMemoryCache(true)
                             .into(targetImageView)
                     }
-
 
                     Glide.with(it)
                         .load(item.drawableBubbleResId)
@@ -167,7 +163,8 @@ class WTThreeFragment : Fragment() {
         binding.btnNext.setOnClickListener {
             eventTracker?.logEvent(requireActivity(), "walkthrough3_scr_tap_start")
             if (sotAdsConfigurations?.getRemoteConfigData()
-                    ?.get("INTERSTITIAL_LETS_START") as? Boolean == true && sotAdsConfigurations?.getRemoteConfigData()
+                    ?.get("INTERSTITIAL_LETS_START") as? Boolean == true &&
+                sotAdsConfigurations?.getRemoteConfigData()
                     ?.get("IS_PURCHASED") as? Boolean == false
             ) {
                 safeShowAdmobWTThreeInterstitial()
@@ -186,11 +183,10 @@ class WTThreeFragment : Fragment() {
             AdMobInterstitialInside.showIfAvailableOrLoadAdMobInterstitial(
                 context = requireActivity(),
                 nameFragment = "WALKTHROUGH_3",
-                adId = sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_INTERSTITIAL_LETS_START")
+                adId = sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_INTERSTITIAL_LETS_START")
                     ?: "",
                 onAdClosedCallBackAdmob = {
                     Log.i("SOT_ADS_TAG", "Interstitial: WALKTHROUGH_3: onAdClosedCallBackAdmob()")
-                    // delay(300)
                     if (isAdded) {
                         safeLetsStartClick()
                     }
@@ -220,10 +216,7 @@ class WTThreeFragment : Fragment() {
             return
         }
 
-        if ((sotAdsConfigurations?.getRemoteConfigData()
-                ?.get("NATIVE_WALKTHROUGH_3") as? Boolean == true) && (sotAdsConfigurations?.getRemoteConfigData()
-                ?.get("IS_PURCHASED") as? Boolean == false)
-        ) {
+        if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_3") == true) {
             safeShowAdmobWTThreeNatives()
         } else {
             binding.nativeAdContainerAd.visibility = View.GONE
@@ -233,7 +226,7 @@ class WTThreeFragment : Fragment() {
     private fun safeShowAdmobWTThreeNatives() {
         if (!isAdded || activity == null) return
 
-        sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_WALKTHROUGH_3")
+        sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_WALKTHROUGH_3")
             ?.let { adId ->
                 AdmobNativeAdManager.requestAd(
                     mContext = requireActivity(),
@@ -241,22 +234,19 @@ class WTThreeFragment : Fragment() {
                     adName = "WALKTHROUGH_3",
                     isMedia = true,
                     isMediumAd = true,
-                    remoteConfig = sotAdsConfigurations
-                        ?.getRemoteConfigData()
-                        ?.getValue("NATIVE_WALKTHROUGH_3")
-                        .toString()
-                        .toBoolean(),
+                    remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_3") ?: true,
+                    nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_WALKTHROUGH_3"),
                     populateView = true,
                     requestAgain = false,
                     adContainer = binding.nativeAdContainerAd,
                     onAdFailed = {
-                        if (isAdded) {
+                        if (_binding != null && isAdded) {
                             binding.nativeAdContainerAd.visibility = View.GONE
                         }
                         Log.i("SOT_ADS_TAG", "WALKTHROUGH_3: Admob: onAdFailed()")
                     },
                     onAdLoaded = {
-                        if (isAdded) {
+                        if (_binding != null && isAdded) {
                             binding.nativeAdContainerAd.visibility = View.VISIBLE
                         }
                         Log.i("SOT_ADS_TAG", "WALKTHROUGH_3: Admob: onAdLoaded()")
@@ -272,8 +262,8 @@ class WTThreeFragment : Fragment() {
 
     private fun loadAdmobWTThreeInterstitial() {
         val adId =
-            sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_INTERSTITIAL_LETS_START")
-        if (adId != null) {
+            sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_INTERSTITIAL_LETS_START")
+        if (!adId.isNullOrEmpty()) {
             AdMobInterstitialInside.checkAndLoadAdMobInterstitial(
                 context = requireActivity(),
                 nameFragment = "WALKTHROUGH_3",

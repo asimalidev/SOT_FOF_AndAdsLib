@@ -40,8 +40,9 @@ class WalkThroughConfigActivity : AppCompatBaseActivity() {
         eventTracker?.logEvent(this, "sot_fof_started")
 
         binding.viewPager.post {
-            val myNoOfFrag = (sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_FULLSCR")as? Boolean ?: false) &&  (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)
-            val noOfFragment = if (NetworkCheck.isNetworkAvailable(this) && myNoOfFrag ) {
+            val myNoOfFrag = (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_FULLSCR") ?: false) &&
+                (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)
+            val noOfFragment = if (NetworkCheck.isNetworkAvailable(this) && myNoOfFrag) {
                 4
             } else {
                 3
@@ -58,12 +59,8 @@ class WalkThroughConfigActivity : AppCompatBaseActivity() {
                     noOfFragment,
                     eventTracker
                 )
-               // setStatusBarColor(walkthroughList.let { it[0].viewBackgroundColor})
-               // STATUS_BAR_COLOR = walkthroughList.let { it[0].viewBackgroundColor}
-
-            }
-            else
-            { Log.e("WalkThrough", "Walkthrough list is null or empty. Cannot create adapter.")
+            } else {
+                Log.e("WalkThrough", "Walkthrough list is null or empty. Cannot create adapter.")
             }
 
             setupPageChangeListener()

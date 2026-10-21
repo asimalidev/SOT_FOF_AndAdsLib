@@ -16,7 +16,7 @@ import com.manual.mediation.library.sotadlib.objects.StatusBarColor
 import com.manual.mediation.library.sotadlib.utils.hideSystemUIUpdated
 import com.manual.mediation.library.sotadlib.utils.setStatusBarColor
 
-class WelcomeScreenDup: AppCompatBaseActivity(), WelcomeDupInterface {
+class WelcomeScreenDup : AppCompatBaseActivity(), WelcomeDupInterface {
 
     private var myView: View? = null
     private var sotAdsConfigurations: SOTAdsConfigurations? = null
@@ -41,17 +41,15 @@ class WelcomeScreenDup: AppCompatBaseActivity(), WelcomeDupInterface {
             }
             setContentView(myView)
         }
-        val nativeWalkThroughTwoEnabled = (sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_2") as? Boolean ?: false)  && (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)
-        if (nativeWalkThroughTwoEnabled) {
+
+        if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_2") == true) {
             loadAdmobWTTwoNatives()
         }
-
     }
 
     override fun onResume() {
         super.onResume()
-        val nativeSurvey1Enabled = (sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_SURVEY_2") as? Boolean ?: false) && (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)
-        if (nativeSurvey1Enabled) {
+        if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_SURVEY_2") == true) {
             showAdmobLanguageScreenOneNatives()
         } else {
             myView?.let {
@@ -65,46 +63,49 @@ class WelcomeScreenDup: AppCompatBaseActivity(), WelcomeDupInterface {
         myView?.let {
             myView?.findViewById<CardView>(R.id.nativeAdContainerMintegral)?.visibility = View.GONE
             myView?.findViewById<CardView>(R.id.nativeAdContainerAdmob)?.visibility = View.VISIBLE
-            sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_SURVEY_2")?.let { adId ->
+            sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_SURVEY_2")?.let { adId ->
                 AdmobNativeAdManager.requestAd(
                     mContext = this,
                     adId = adId,
                     adName = "NATIVE_SURVEY_2",
                     isMedia = true,
                     isMediumAd = true,
-                    remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.getValue("NATIVE_SURVEY_2").toString().toBoolean(),
+                    remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_SURVEY_2") ?: true,
+                    nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_SURVEY_2"),
                     populateView = true,
                     requestAgain = false,
                     adContainer = myView?.findViewById(R.id.nativeAdContainerAdmob),
                     onAdFailed = {
                         myView?.findViewById<CardView>(R.id.nativeAdContainerAdmob)?.visibility = View.GONE
-                        Log.i("SOT_ADS_TAG","WelcomeScreenDup: Admob: onAdFailed()")
+                        Log.i("SOT_ADS_TAG", "WelcomeScreenDup: Admob: onAdFailed()")
                     },
                     onAdLoaded = {
-                        Log.i("SOT_ADS_TAG","WelcomeScreenDup: Admob: onAdLoaded()")
+                        Log.i("SOT_ADS_TAG", "WelcomeScreenDup: Admob: onAdLoaded()")
                     }
                 )
             } ?: Log.w("WelcomeScreenDup", "ADMOB_NATIVE_SURVEY_2 ad ID is missing.")
         }
     }
 
-
     override fun endWelcomeTwoScreen() {
         finish()
     }
+
     private fun loadAdmobWTTwoNatives() {
-        val adId = sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_WALKTHROUGH_2")
-        if (adId != null) {
+        val adId = sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_WALKTHROUGH_2")
+        if (!adId.isNullOrEmpty()) {
             AdmobNativeAdManager.requestAd(
                 mContext = this,
                 adId = adId,
                 adName = "WALKTHROUGH_2",
                 isMedia = true,
                 isMediumAd = true,
+                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_WALKTHROUGH_2") ?: true,
+                nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_WALKTHROUGH_2"),
                 populateView = false
             )
         } else {
-            Log.e("SOT_ADS_TAG","Admob ad ID not found for ADMOB_NATIVE_WALKTHROUGH_2")
+            Log.e("SOT_ADS_TAG", "Admob ad ID not found for ADMOB_NATIVE_WALKTHROUGH_2")
         }
     }
 }

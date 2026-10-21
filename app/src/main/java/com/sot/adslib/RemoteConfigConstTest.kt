@@ -4,15 +4,31 @@ object RemoteConfigConstTest {
     // SOT-Ads-Visibility-Config
     const val RESUME_INTER_SPLASH = "RESUME_INTER_SPLASH"
     const val RESUME_OVERALL = "RESUME_OVERALL"
+    /**
+     * Supports Boolean (true/false) OR String: "OFF", "SMALL", "LARGE", "COLLAPSIBLE", "COLLAPSIBLE_BOTTOM", "COLLAPSIBLE_TOP"
+     */
     const val BANNER_SPLASH = "BANNER_SPLASH"
+    const val BANNER_SPLASH_TYPE = "BANNER_SPLASH_TYPE"
+
+    /**
+     * Each NATIVE_* key supports Boolean (true/false) OR String: "OFF", "SMALL", "MEDIUM", "LARGE", "MEDIA_LEFT".
+     * Optional *_SIZE keys can also be used alongside Boolean keys.
+     */
     const val NATIVE_LANGUAGE_1 = "NATIVE_LANGUAGE_1"
+    const val NATIVE_LANGUAGE_1_SIZE = "NATIVE_LANGUAGE_1_SIZE"
     const val NATIVE_LANGUAGE_2 = "NATIVE_LANGUAGE_2"
+    const val NATIVE_LANGUAGE_2_SIZE = "NATIVE_LANGUAGE_2_SIZE"
     const val NATIVE_SURVEY_1 = "NATIVE_SURVEY_1"
+    const val NATIVE_SURVEY_1_SIZE = "NATIVE_SURVEY_1_SIZE"
     const val NATIVE_SURVEY_2 = "NATIVE_SURVEY_2"
+    const val NATIVE_SURVEY_2_SIZE = "NATIVE_SURVEY_2_SIZE"
     const val NATIVE_WALKTHROUGH_1 = "NATIVE_WALKTHROUGH_1"
+    const val NATIVE_WALKTHROUGH_1_SIZE = "NATIVE_WALKTHROUGH_1_SIZE"
     const val NATIVE_WALKTHROUGH_2 = "NATIVE_WALKTHROUGH_2"
+    const val NATIVE_WALKTHROUGH_2_SIZE = "NATIVE_WALKTHROUGH_2_SIZE"
     const val NATIVE_WALKTHROUGH_FULLSCR = "NATIVE_WALKTHROUGH_FULLSCR"
     const val NATIVE_WALKTHROUGH_3 = "NATIVE_WALKTHROUGH_3"
+    const val NATIVE_WALKTHROUGH_3_SIZE = "NATIVE_WALKTHROUGH_3_SIZE"
     const val INTERSTITIAL_LETS_START = "INTERSTITIAL_LETS_START"
 
     const val TIMER_NATIVE_F_SRC = "TIMER_NATIVE_F_SRC"

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.google.android.gms.ads.nativead.NativeAdView
+    <com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#D9D9D9"
@@ -14,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
-            <com.google.android.gms.ads.nativead.MediaView
+            <com.google.android.libraries.ads.mobile.sdk.nativead.MediaView
                 android:id="@+id/ad_mediaShimmer"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -105,5 +105,5 @@
                 app:layout_constraintEnd_toEndOf="@+id/linearLayout3Shimmer"
                 app:layout_constraintStart_toStartOf="@+id/linearLayout3Shimmer" />
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.gms.ads.nativead.NativeAdView>
+    </com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdView>
 </com.facebook.shimmer.ShimmerFrameLayout>

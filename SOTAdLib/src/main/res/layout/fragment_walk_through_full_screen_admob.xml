@@ -26,7 +26,7 @@
             android:src="@drawable/ic_close"
             android:visibility="visible" />
 
-        <com.google.android.gms.ads.nativead.NativeAdView
+        <com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdView
             android:id="@+id/nativeAdViewAdmob"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
@@ -38,13 +38,15 @@
                 android:layout_height="match_parent"
                 android:background="#e1e1e1">
 
-                <com.google.android.gms.ads.nativead.MediaView
+                <com.google.android.libraries.ads.mobile.sdk.nativead.MediaView
                     android:id="@+id/adMedia"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:minWidth="120dp"
+                    android:minHeight="120dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <androidx.appcompat.widget.AppCompatTextView
@@ -156,7 +158,7 @@
                     app:layout_constraintStart_toStartOf="@+id/linearLayout3"
                     tools:text="Install" />
             </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.gms.ads.nativead.NativeAdView>
+        </com.google.android.libraries.ads.mobile.sdk.nativead.NativeAdView>
 
         <FrameLayout
             android:id="@+id/bannerAdF"

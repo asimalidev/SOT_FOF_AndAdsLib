@@ -9,7 +9,7 @@ android {
     namespace 'com.manual.mediation.library.sotadlib'
     compileSdk 36
     defaultConfig {
-        minSdk 23
+        minSdk 24
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -32,6 +32,11 @@ android {
         buildConfig = true
         viewBinding = true
     }
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
 }
 
 dependencies {
@@ -47,7 +52,11 @@ dependencies {
     implementation libs.ssp.android
     implementation libs.sdp.android
     implementation libs.lottie
-    implementation libs.play.services.ads
+    api libs.ads.mobile.sdk
+    api libs.user.messaging.platform
+    api libs.mintegral
+    api libs.pangle
+    api libs.applovin
     implementation 'androidx.lifecycle:lifecycle-process:2.9.4'
     implementation 'com.facebook.android:audience-network-sdk:6.21.0'
     implementation 'androidx.navigation:navigation-fragment-ktx:2.9.6'
@@ -57,6 +66,11 @@ dependencies {
 
 }
 
+configurations.configureEach {
+    exclude group: "com.google.android.gms", module: "play-services-ads"
+    exclude group: "com.google.android.gms", module: "play-services-ads-lite"
+}
+
 afterEvaluate {
     publishing {
         publications {
@@ -64,7 +78,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.Kalimullah95'
                 artifactId = 'SOT_FOF_AndAdsLib'
-                version = '1.0'
+                version = '3.2.0'
             }
         }
     }

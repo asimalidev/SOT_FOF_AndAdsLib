@@ -5,8 +5,9 @@ import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobInterstitialAdSplash
-import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobResumeAdSplash
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobNativeAdManager
+import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobResumeAdSplash
+import com.manual.mediation.library.sotadlib.adMobAdClasses.NativeAdSize
 import com.manual.mediation.library.sotadlib.utils.NetworkCheck
 import com.manual.mediation.library.sotadlib.utils.PrefHelper
 import com.manual.mediation.library.sotadlib.utilsGoogleAdsConsent.ConsentConfigurations
@@ -21,52 +22,79 @@ class SOTAdsConfigurations private constructor() {
     private lateinit var admobResumeAdSplash: AdmobResumeAdSplash
     private lateinit var admobInterstitialAdSplash: AdmobInterstitialAdSplash
 
+    /**
+     * Checks whether a Native Ad slot is enabled in [remoteConfigData].
+     * Supports both Boolean (`true`/`false`) and String (`"OFF"`, `"SMALL"`, `"MEDIUM"`, `"LARGE"`, `"MEDIA_LEFT"`).
+     */
+    fun isNativeAdEnabled(key: String): Boolean {
+        return NativeAdSize.isEnabled(
+            value = remoteConfigData?.get(key),
+            isPurchased = remoteConfigData?.get("IS_PURCHASED")
+        )
+    }
+
+    /**
+     * Resolves the Native Ad size for [key] from [remoteConfigData].
+     * Looks up:
+     * 1. `"${key}_SIZE"` (e.g., `"NATIVE_LANGUAGE_1_SIZE"`)
+     * 2. `"NATIVE_SIZE"` (global FOF native size override)
+     * 3. `[key]` itself (if passed as `"SMALL"`, `"MEDIUM"`, `"LARGE"`, `"MEDIA_LEFT"`)
+     */
+    fun getNativeAdSize(key: String): Any? {
+        return remoteConfigData?.get("${key}_SIZE")
+            ?: remoteConfigData?.get("NATIVE_SIZE")
+            ?: remoteConfigData?.get(key)
+    }
+
     @RequiresApi(Build.VERSION_CODES.N)
     fun setRemoteConfigData(activityContext: Activity, myRemoteConfigData: HashMap<String, Any>) {
         this.remoteConfigData = myRemoteConfigData
         this.remoteConfigData?.forEach { value ->
-            Log.i("RemoteConfigFetches","SOTAdsConfigurations : setRemoteConfigData() "+value.key + " : " + value.value)
+            Log.i(
+                "RemoteConfigFetches",
+                "SOTAdsConfigurations : setRemoteConfigData() " + value.key + " : " + value.value
+            )
         }
 
-        if (NetworkCheck.isNetworkAvailable(activityContext) && myRemoteConfigData["IS_PURCHASED"] as? Boolean == false) {
+        if (NetworkCheck.isNetworkAvailable(activityContext) &&
+            myRemoteConfigData["IS_PURCHASED"] as? Boolean == false
+        ) {
             if (!PrefHelper(activityContext).getBooleanDefault("StartScreens", default = false)) {
-                if (myRemoteConfigData.getValue("NATIVE_LANGUAGE_1") == true) {
+                if (isNativeAdEnabled("NATIVE_LANGUAGE_1")) {
                     loadAdmobLanguageScreenOneNatives(activityContext)
                 }
-                if (myRemoteConfigData.getValue("NATIVE_LANGUAGE_2") == true) {
+                if (isNativeAdEnabled("NATIVE_LANGUAGE_2")) {
                     loadAdmobLanguageScreenDupNatives(activityContext)
                 }
-
             }
-            when {
-                myRemoteConfigData.getValue("RESUME_INTER_SPLASH") == "RESUME" -> {
+            when (myRemoteConfigData["RESUME_INTER_SPLASH"]?.toString()?.trim()?.uppercase()) {
+                "RESUME" -> {
                     showAdMobResumeAdSplash(activityContext)
                 }
-                myRemoteConfigData.getValue("RESUME_INTER_SPLASH") == "INTERSTITIAL" -> {
+                "INTERSTITIAL" -> {
                     showAdMobInterstitialAdSplash(activityContext)
                 }
-                myRemoteConfigData.getValue("RESUME_INTER_SPLASH") == "OFF" -> {
+                else -> {
                     proceedNext(activityContext)
                 }
-
             }
-
-
         } else {
             proceedNext(activityContext)
         }
     }
+
     @RequiresApi(Build.VERSION_CODES.N)
     private fun loadNativeAds(activityContext: Activity) {
         if (!PrefHelper(activityContext).getBooleanDefault("StartScreens", default = false)) {
-            if (remoteConfigData?.getValue("NATIVE_LANGUAGE_1") == true) {
+            if (isNativeAdEnabled("NATIVE_LANGUAGE_1")) {
                 loadAdmobLanguageScreenOneNatives(activityContext)
             }
-            if (remoteConfigData?.getValue("NATIVE_LANGUAGE_2") == true) {
+            if (isNativeAdEnabled("NATIVE_LANGUAGE_2")) {
                 loadAdmobLanguageScreenDupNatives(activityContext)
             }
         }
     }
+
     @RequiresApi(Build.VERSION_CODES.N)
     private fun loadAdmobLanguageScreenOneNatives(mContext: Activity) {
         val adId = firstOpenFlowAdIds.getOrDefault("ADMOB_NATIVE_LANGUAGE_1", "")
@@ -78,11 +106,11 @@ class SOTAdsConfigurations private constructor() {
             adName = "NATIVE_LANGUAGE_1",
             isMedia = true,
             isMediumAd = true,
+            remoteConfig = remoteConfigData?.get("NATIVE_LANGUAGE_1") ?: true,
+            nativeSize = getNativeAdSize("NATIVE_LANGUAGE_1"),
             populateView = false
         )
     }
-
-
 
     @RequiresApi(Build.VERSION_CODES.N)
     private fun loadAdmobLanguageScreenDupNatives(mContext: Activity) {
@@ -95,26 +123,26 @@ class SOTAdsConfigurations private constructor() {
             adName = "NATIVE_LANGUAGE_2",
             isMedia = true,
             isMediumAd = true,
+            remoteConfig = remoteConfigData?.get("NATIVE_LANGUAGE_2") ?: true,
+            nativeSize = getNativeAdSize("NATIVE_LANGUAGE_2"),
             populateView = false
         )
     }
 
-
     private fun showAdMobResumeAdSplash(activityContext: Activity) {
-        activityContext.let {
-            admobResumeAdSplash = AdmobResumeAdSplash(activityContext, firstOpenFlowAdIds.getValue("ADMOB_SPLASH_RESUME"),
-                onAdDismissed = {
-                    proceedNext(activityContext)
-                },
-                onAdFailed = {
-                    proceedNext(activityContext)
-                },
-                onAdTimeout = {
-                    proceedNext(activityContext)
-                },
-                onAdShowed = {}
-            )
+        val adId = firstOpenFlowAdIds["ADMOB_SPLASH_RESUME"] ?: ""
+        if (adId.isEmpty()) {
+            proceedNext(activityContext)
+            return
         }
+        admobResumeAdSplash = AdmobResumeAdSplash(
+            activityContext,
+            adId,
+            onAdDismissed = { proceedNext(activityContext) },
+            onAdFailed = { proceedNext(activityContext) },
+            onAdTimeout = { proceedNext(activityContext) },
+            onAdShowed = {}
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.N)
@@ -126,7 +154,9 @@ class SOTAdsConfigurations private constructor() {
             return
         }
 
-        admobInterstitialAdSplash = AdmobInterstitialAdSplash(activityContext, adId,
+        admobInterstitialAdSplash = AdmobInterstitialAdSplash(
+            activityContext,
+            adId,
             onAdDismissed = { proceedNext(activityContext) },
             onAdFailed = { proceedNext(activityContext) },
             onAdTimeout = { proceedNext(activityContext) },
@@ -134,9 +164,7 @@ class SOTAdsConfigurations private constructor() {
         )
     }
 
-
-
-     fun proceedNext(activityContext: Activity) {
+    fun proceedNext(activityContext: Activity) {
         if (PrefHelper(activityContext).getBooleanDefault("StartScreens", default = false)) {
             SOTAdsManager.notifyFlowFinished()
         } else {
@@ -144,23 +172,23 @@ class SOTAdsConfigurations private constructor() {
         }
     }
 
-    fun getRemoteConfigData() : HashMap<String, Any>? {
+    fun getRemoteConfigData(): HashMap<String, Any>? {
         return this.remoteConfigData
     }
 
     private fun startLanguageScreenConfiguration() {
-        Log.i("LanguageScreens","SOTAdsConfigurations : startLanguageScreenConfiguration() ")
+        Log.i("LanguageScreens", "SOTAdsConfigurations : startLanguageScreenConfiguration() ")
         this.languageScreensConfiguration?.languageInitializationSetup() ?: run { }
     }
 
     fun startWelcomeScreenConfiguration() {
-        Log.i("WelcomeScreens","SOTAdsConfigurations : startWelcomeScreenConfiguration() ")
+        Log.i("WelcomeScreens", "SOTAdsConfigurations : startWelcomeScreenConfiguration() ")
         SOTAdsManager.notifyReConfigureBuilders()
         this.welcomeScreensConfiguration?.welcomeInitializationSetup() ?: run { }
     }
 
     fun startWalkThroughConfiguration() {
-        Log.i("WalkThroughScreens","SOTAdsConfigurations : startWalkThroughConfiguration() ")
+        Log.i("WalkThroughScreens", "SOTAdsConfigurations : startWalkThroughConfiguration() ")
         this.walkThroughScreensConfiguration?.walkThroughInitializationSetup() ?: run { }
     }
 
@@ -174,7 +202,7 @@ class SOTAdsConfigurations private constructor() {
         fun setFirstOpenFlowAdIds(firstOpenFlowAdIds: HashMap<String, String>) = apply {
             this.firstOpenFlowAdIds = firstOpenFlowAdIds
             this.firstOpenFlowAdIds.forEach { value ->
-                Log.i("SOT_ADS_TAG","setFirstOpenFlowAdIds : "+value.key + " : " + value.value)
+                Log.i("SOT_ADS_TAG", "setFirstOpenFlowAdIds : " + value.key + " : " + value.value)
             }
         }
 

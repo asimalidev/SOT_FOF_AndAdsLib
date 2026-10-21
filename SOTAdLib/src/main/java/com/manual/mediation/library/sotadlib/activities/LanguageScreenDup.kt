@@ -8,7 +8,6 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.addCallback
 import androidx.appcompat.widget.AppCompatButton
-import androidx.appcompat.widget.AppCompatImageView
 import androidx.cardview.widget.CardView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -22,7 +21,7 @@ import com.manual.mediation.library.sotadlib.interfaces.CommonEventTracker
 import com.manual.mediation.library.sotadlib.utils.hideSystemUIUpdated
 import com.manual.mediation.library.sotadlib.utils.setStatusBarColor
 
-class LanguageScreenDup: AppCompatBaseActivity() {
+class LanguageScreenDup : AppCompatBaseActivity() {
     private lateinit var languageAdapter: LanguageAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var imvDone: AppCompatButton
@@ -30,6 +29,7 @@ class LanguageScreenDup: AppCompatBaseActivity() {
     private var sotAdsConfigurations: SOTAdsConfigurations? = null
     private var tracker: CommonEventTracker? = null
     private var comeFrom: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supportActionBar?.hide()
@@ -49,7 +49,6 @@ class LanguageScreenDup: AppCompatBaseActivity() {
         val delayStr = sotAdsConfigurations?.getRemoteConfigData()?.get("DELAY_TO_SHOW_LANGUAGE_DONE")?.toString()
 
         Log.i("SOT_ADS_TAG", "DELAY_TO_SHOW_LANGUAGE_DONE: $delayStr")
-
 
         val timeDelayMillis = delayStr?.toLongOrNull() ?: 3000L
 
@@ -101,15 +100,15 @@ class LanguageScreenDup: AppCompatBaseActivity() {
                                     selectedDrawable = selectedDrawable,
                                     unSelectedDrawable = unSelectedDrawable,
                                     selectedRadio = selectedRadio,
-                                    unSelectedRadio = unSelectedRadio, onItemClickListener = {
-                                            position ->
-                                           // recreate()
+                                    unSelectedRadio = unSelectedRadio,
+                                    onItemClickListener = { _ ->
                                         tracker?.logEvent(
                                             this,
                                             "language2_scr_tap_language"
                                         )
-                                                                                             }
-                                    , fontColor = config.fontColor!!)
+                                    },
+                                    fontColor = config.fontColor!!
+                                )
                                 recyclerView.adapter = languageAdapter
                             }
                         }
@@ -136,28 +135,20 @@ class LanguageScreenDup: AppCompatBaseActivity() {
                     finish()
                 }
             }
-
         }
 
-        if ((sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_SURVEY_1") as? Boolean ?: false) &&
-            (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)  && comeFrom==null){
+        if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_SURVEY_1") == true && comeFrom == null) {
             loadAdmobSurveyOneNatives()
         }
 
-        val nativeSurvey2Enabled = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_SURVEY_2") as? Boolean ?: false
-
-
-        if ((sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_SURVEY_2") as? Boolean ?: false) &&
-            (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)  && comeFrom==null) {
+        if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_SURVEY_2") == true && comeFrom == null) {
             loadAdmobSurveyDupNatives()
         }
 
         val callback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 intent?.let {
-//                    if (it.getStringExtra("From").equals("AppSettings")) {
-                        finish()
-//                    }
+                    finish()
                 }
             }
         }
@@ -167,26 +158,24 @@ class LanguageScreenDup: AppCompatBaseActivity() {
     override fun onResume() {
         super.onResume()
 
-        if ( (sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_LANGUAGE_2") as? Boolean ?: false) &&
-            (sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") as? Boolean == false)) {
+        if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_LANGUAGE_2") == true) {
             findViewById<CardView>(R.id.nativeAdContainerAd).visibility = View.VISIBLE
             showAdmobLanguageScreenDupNatives()
         } else {
-            findViewById<CardView>(R.id.nativeAdContainerAd)?.let {
-                findViewById<CardView>(R.id.nativeAdContainerAd)?.visibility = View.GONE
-            }
+            findViewById<CardView>(R.id.nativeAdContainerAd)?.visibility = View.GONE
         }
     }
 
     private fun showAdmobLanguageScreenDupNatives() {
-        sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_LANGUAGE_2")?.let { adId ->
+        sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_LANGUAGE_2")?.let { adId ->
             AdmobNativeAdManager.requestAd(
                 mContext = this,
                 adId = adId,
                 adName = "NATIVE_LANGUAGE_2",
                 isMedia = true,
                 isMediumAd = true,
-                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_LANGUAGE_2").toString().toBoolean(),
+                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_LANGUAGE_2") ?: true,
+                nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_LANGUAGE_2"),
                 populateView = true,
                 requestAgain = false,
                 adContainer = findViewById(R.id.nativeAdContainerAd),
@@ -195,7 +184,7 @@ class LanguageScreenDup: AppCompatBaseActivity() {
                         this,
                         "sot_language_two_onAdFailed"
                     )
-                    findViewById<CardView>(R.id.nativeAdContainerAd).visibility = View.GONE
+                    findViewById<CardView>(R.id.nativeAdContainerAd)?.visibility = View.GONE
                     Log.i("SOT_ADS_TAG", "LanguageScreenDup: Admob onAdFailed()")
                 },
                 onAdLoaded = {
@@ -209,17 +198,17 @@ class LanguageScreenDup: AppCompatBaseActivity() {
         } ?: Log.w("SOT_ADS_TAG", "ADMOB_NATIVE_LANGUAGE_2 ad ID is missing.")
     }
 
-
-
     private fun loadAdmobSurveyOneNatives() {
-        val adId = sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_SURVEY_1")
-        if (adId != null) {
+        val adId = sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_SURVEY_1")
+        if (!adId.isNullOrEmpty()) {
             AdmobNativeAdManager.requestAd(
                 mContext = this,
                 adId = adId,
                 adName = "NATIVE_SURVEY_1",
                 isMedia = true,
                 isMediumAd = true,
+                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_SURVEY_1") ?: true,
+                nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_SURVEY_1"),
                 populateView = false
             )
         } else {
@@ -227,21 +216,21 @@ class LanguageScreenDup: AppCompatBaseActivity() {
         }
     }
 
-
     private fun loadAdmobSurveyDupNatives() {
-        val adId = sotAdsConfigurations?.firstOpenFlowAdIds?.getValue("ADMOB_NATIVE_SURVEY_2")
-        if (adId != null) {
+        val adId = sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_SURVEY_2")
+        if (!adId.isNullOrEmpty()) {
             AdmobNativeAdManager.requestAd(
                 mContext = this,
                 adId = adId,
                 adName = "NATIVE_SURVEY_2",
                 isMedia = true,
                 isMediumAd = true,
+                remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("NATIVE_SURVEY_2") ?: true,
+                nativeSize = sotAdsConfigurations?.getNativeAdSize("NATIVE_SURVEY_2"),
                 populateView = false
             )
         } else {
             Log.e("SOT_ADS_TAG", "Admob ad ID not found for NATIVE_SURVEY_2")
         }
     }
-
 }
