@@ -293,11 +293,8 @@ object AdmobNativeAdManager {
         isMedia: Boolean,
         hasVideoContent: Boolean
     ): Pair<Int, Boolean> {
-        // If AdMob returns a video creative for a non-media slot, upgrade to MEDIA_LEFT so MediaView >= 120x120dp
-        if (hasVideoContent && (size == NativeAdSize.SMALL || (size == NativeAdSize.MEDIUM && !isMedia))) {
-            return R.layout.native_admob_media_left_side to true
-        }
-
+        // Always honor the size requested from Remote Config (SMALL stays SMALL even for video creatives).
+        Log.i("SOT_ADS_TAG", "Native layout: size=$size, isMedia=$isMedia, hasVideo=$hasVideoContent")
         return when (size) {
             NativeAdSize.LARGE -> R.layout.admob_native_mediaview_large to true
             NativeAdSize.MEDIA_LEFT -> R.layout.native_admob_media_left_side to true

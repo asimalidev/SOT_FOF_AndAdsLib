@@ -78,7 +78,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.asimalidev'
                 artifactId = 'SOT_FOF_AndAdsLib'
-                version = '3.3.0'
+                version = '3.3.2'
             }
         }
     }

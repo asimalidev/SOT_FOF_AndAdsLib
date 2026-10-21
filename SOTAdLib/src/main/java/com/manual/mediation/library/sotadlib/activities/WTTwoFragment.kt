@@ -108,7 +108,7 @@ class WTTwoFragment : Fragment() {
         if (item.headingColor != 0) binding.txtHeading.setTextColor(ContextCompat.getColor(requireContext(), item.headingColor))
         if (item.descriptionColor != 0) binding.txtDescription.setTextColor(ContextCompat.getColor(requireContext(), item.descriptionColor))
         if (item.nextColor != 0) binding.btnNext.setTextColor(ContextCompat.getColor(requireContext(), item.nextColor))
-        if (item.nextBackground != 0) { binding.btnNext.background = ContextCompat.getDrawable(requireContext(), item.nextBackground) } else { binding.btnNext.background = null }
+        if (item.nextBackground != 0) { binding.btnNext.background = ContextCompat.getDrawable(requireContext(), item.nextBackground) }
         binding.txtHeading.text = item.heading
         binding.txtDescription.text = item.description
 
