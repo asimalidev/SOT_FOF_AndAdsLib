@@ -76,7 +76,7 @@ afterEvaluate {
         publications {
             release(MavenPublication) {
                 from components.release
-                groupId = 'com.github.asimalidev'
+                groupId = 'com.github.usamadev'
                 artifactId = 'SOT_FOF_AndAdsLib'
                 version = '3.3.2'
             }
