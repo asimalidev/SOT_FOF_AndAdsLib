@@ -105,14 +105,14 @@ class WTTwoFragment : Fragment() {
             }
         }
 
-        binding.txtHeading.setTextColor(ContextCompat.getColor(requireContext(), item.headingColor))
-        binding.txtDescription.setTextColor(ContextCompat.getColor(requireContext(), item.descriptionColor))
-        binding.btnNext.setTextColor(ContextCompat.getColor(requireContext(), item.nextColor))
-        binding.btnNext.background = resources.getDrawable(item.nextBackground)
+        if (item.headingColor != 0) binding.txtHeading.setTextColor(ContextCompat.getColor(requireContext(), item.headingColor))
+        if (item.descriptionColor != 0) binding.txtDescription.setTextColor(ContextCompat.getColor(requireContext(), item.descriptionColor))
+        if (item.nextColor != 0) binding.btnNext.setTextColor(ContextCompat.getColor(requireContext(), item.nextColor))
+        if (item.nextBackground != 0) { binding.btnNext.background = ContextCompat.getDrawable(requireContext(), item.nextBackground) } else { binding.btnNext.background = null }
         binding.txtHeading.text = item.heading
         binding.txtDescription.text = item.description
 
-        binding.root.setBackgroundColor(ContextCompat.getColor(requireContext(), item.viewBackgroundColor))
+        if (item.viewBackgroundColor != 0) binding.root.setBackgroundColor(ContextCompat.getColor(requireContext(), item.viewBackgroundColor))
 
         if (!NetworkCheck.isNetworkAvailable(context)) {
             binding.glOne.setGuidelinePercent(0.8f)
