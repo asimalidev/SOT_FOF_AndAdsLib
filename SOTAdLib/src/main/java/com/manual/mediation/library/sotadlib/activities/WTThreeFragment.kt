@@ -284,4 +284,5 @@ class WTThreeFragment : Fragment() {
             Log.e("SOT_ADS_TAG", "Admob: Interstitial ad ID not found for WALKTHROUGH_3")
         }
     }
+
 }

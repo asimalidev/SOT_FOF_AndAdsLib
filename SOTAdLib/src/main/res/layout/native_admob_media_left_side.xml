@@ -111,15 +111,14 @@
 
             <Button
                 android:id="@+id/adCallToAction"
+            android:background="@drawable/bg_native_cta"
+            android:textColor="@color/White"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginVertical="@dimen/_4sdp"
-                android:background="@drawable/round_corners_2dp"
-                app:backgroundTint="@color/blue"
                 android:gravity="center"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                android:textColor="@color/black"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"

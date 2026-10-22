@@ -7,6 +7,7 @@ import android.os.Looper
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.Display
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -19,6 +20,7 @@ import com.google.android.libraries.ads.mobile.sdk.banner.BannerAdRequest
 import com.google.android.libraries.ads.mobile.sdk.common.AdLoadCallback
 import com.google.android.libraries.ads.mobile.sdk.common.LoadAdError
 import com.manual.mediation.library.sotadlib.BuildConfig
+import com.manual.mediation.library.sotadlib.R
 import com.manual.mediation.library.sotadlib.utils.NetworkCheck
 
 /**
@@ -124,9 +126,9 @@ class AdMobBannerAdSplash(
             height = ViewGroup.LayoutParams.WRAP_CONTENT
         }
         bannerContainer.visibility = View.VISIBLE
-        shimmerContainer.visibility = View.VISIBLE
-
         val adSize = resolveAdSize(activity, resolvedBannerType)
+        applySizedShimmer(activity, adSize)
+        shimmerContainer.visibility = View.VISIBLE
         val requestBuilder = BannerAdRequest.Builder(placementID, adSize)
 
         when (resolvedBannerType) {
@@ -198,6 +200,24 @@ class AdMobBannerAdSplash(
                 }
             }
         )
+    }
+
+    /**
+     * Makes the shimmer match the banner that is about to load: LARGE gets the large shimmer,
+     * every other type gets the small one, and the height follows the resolved ad size.
+     */
+    private fun applySizedShimmer(activity: Activity, adSize: AdSize) {
+        val group = shimmerContainer as? ViewGroup ?: return
+        val contentRes = when (resolvedBannerType) {
+            SplashBannerType.LARGE -> R.layout.banner_shimmer_content_large
+            else -> R.layout.banner_shimmer_content_small
+        }
+        group.removeAllViews()
+        LayoutInflater.from(activity).inflate(contentRes, group, true)
+        val heightPx = adSize.getHeightInPixels(activity)
+        if (heightPx > 0) {
+            group.layoutParams = group.layoutParams?.apply { height = heightPx }
+        }
     }
 
     @Suppress("DEPRECATION")

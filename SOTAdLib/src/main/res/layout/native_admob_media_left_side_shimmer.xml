@@ -101,7 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_marginVertical="@dimen/_4sdp"
-                android:background="@color/lightTransparent"
+                android:background="@drawable/bg_shimmer_cta"
                 android:gravity="center"
                 android:textSize="12sp"
                 android:textStyle="bold"

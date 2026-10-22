@@ -126,11 +126,11 @@
 
         <Button
             android:id="@+id/adCallToAction"
+            android:background="@drawable/bg_native_cta"
+            android:textColor="@color/White"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/_5sdp"
-            android:background="@drawable/round_corners_2dp"
-            android:textColor="@color/black"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@id/adMedia"
             app:layout_constraintStart_toStartOf="@id/adMedia"
