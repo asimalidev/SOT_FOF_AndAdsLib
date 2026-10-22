@@ -76,7 +76,7 @@ afterEvaluate {
                 from components.release
                 groupId = 'com.github.usamadev'
                 artifactId = 'SOT_FOF_AndAdsLib'
-                version = '3.3.3'
+                version = '3.3.3.1'
             }
         }
     }
