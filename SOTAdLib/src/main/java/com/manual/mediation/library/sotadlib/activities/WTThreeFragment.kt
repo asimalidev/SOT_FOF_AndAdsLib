@@ -14,6 +14,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdMobInterstitialInside
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobNativeAdFullScreen
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobNativeAdManager
+import com.manual.mediation.library.sotadlib.adMobAdClasses.PictureInPictureAdClass
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsConfigurations
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsManager
 import com.manual.mediation.library.sotadlib.data.WalkThroughItem
@@ -181,6 +182,7 @@ class WTThreeFragment : Fragment() {
             }
             AdmobNativeAdFullScreen.clearAdCache()
             AdmobNativeAdManager.clearAdCache()
+            PictureInPictureAdClass.clearAdCache()
         }
     }
 
@@ -221,14 +223,27 @@ class WTThreeFragment : Fragment() {
         if (!NetworkCheck.isNetworkAvailable(context)) {
             binding.glOne.setGuidelinePercent(0.8f)
             binding.nativeAdContainerAd.visibility = View.GONE
+            PictureInPictureAdClass.destroyAd("PIP_WALKTHROUGH_3")
             return
         }
 
         if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_3") == true) {
             safeShowAdmobWTThreeNatives()
         } else {
+            binding.glOne.setGuidelinePercent(0.8f)
             binding.nativeAdContainerAd.visibility = View.GONE
         }
+
+        if (sotAdsConfigurations?.isPipAdEnabled("PIP_WALKTHROUGH_3") == true) {
+            safeShowAdmobWTThreePip()
+        } else {
+            PictureInPictureAdClass.destroyAd("PIP_WALKTHROUGH_3")
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        PictureInPictureAdClass.destroyAd("PIP_WALKTHROUGH_3")
     }
 
     private fun safeShowAdmobWTThreeNatives() {
@@ -249,12 +264,14 @@ class WTThreeFragment : Fragment() {
                     adContainer = binding.nativeAdContainerAd,
                     onAdFailed = {
                         if (_binding != null && isAdded) {
+                            binding.glOne.setGuidelinePercent(0.8f)
                             binding.nativeAdContainerAd.visibility = View.GONE
                         }
                         Log.i("SOT_ADS_TAG", "WALKTHROUGH_3: Admob: onAdFailed()")
                     },
                     onAdLoaded = {
                         if (_binding != null && isAdded) {
+                            binding.glOne.setGuidelinePercent(0.55f)
                             binding.nativeAdContainerAd.visibility = View.VISIBLE
                         }
                         Log.i("SOT_ADS_TAG", "WALKTHROUGH_3: Admob: onAdLoaded()")
@@ -263,8 +280,30 @@ class WTThreeFragment : Fragment() {
             }
     }
 
+    private fun safeShowAdmobWTThreePip() {
+        if (!isAdded || activity == null) return
+        val adId = sotAdsConfigurations?.getPipAdId("PIP_WALKTHROUGH_3") ?: ""
+        PictureInPictureAdClass.requestAd(
+            mContext = requireActivity(),
+            adId = adId,
+            adName = "PIP_WALKTHROUGH_3",
+            remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("PIP_WALKTHROUGH_3") ?: true,
+            pipPosition = sotAdsConfigurations?.getPipAdPosition("PIP_WALKTHROUGH_3"),
+            isPurchased = sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") ?: false,
+            populateView = true,
+            requestAgain = true,
+            onAdFailed = {
+                Log.i("SOT_ADS_TAG", "PIP_WALKTHROUGH_3: Admob: onAdFailed()")
+            },
+            onAdLoaded = {
+                Log.i("SOT_ADS_TAG", "PIP_WALKTHROUGH_3: Admob: onAdLoaded()")
+            }
+        )
+    }
+
     override fun onDestroyView() {
         super.onDestroyView()
+        PictureInPictureAdClass.destroyAd("PIP_WALKTHROUGH_3")
         _binding = null
     }
 

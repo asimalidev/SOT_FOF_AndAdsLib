@@ -3,6 +3,7 @@
     <color name="black">#000000</color>
     <color name="blue">#0072D1</color>
     <color name="White">#FFFFFF</color>
+    <color name="white">#FFFFFF</color>
     <color name="yellowLib">#FFC107</color>
     <color name="redLib">#FF0000</color>
     <color name="orangeLib">#FF5722</color>

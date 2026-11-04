@@ -201,11 +201,17 @@ object AdmobNativeAdManager {
             .setStartMuted(true)
             .build()
 
+        val adChoicesPlacement = if (resolvedSize == NativeAdSize.LARGE) {
+            AdChoicesPlacement.BOTTOM_RIGHT
+        } else {
+            AdChoicesPlacement.TOP_RIGHT
+        }
+
         val adRequest = NativeAdRequest.Builder(
             adId,
             listOf(NativeAd.NativeAdType.NATIVE)
         )
-            .setAdChoicesPlacement(AdChoicesPlacement.TOP_RIGHT)
+            .setAdChoicesPlacement(adChoicesPlacement)
             .setVideoOptions(videoOptions)
             .build()
 
@@ -352,6 +358,7 @@ object AdmobNativeAdManager {
         container.addView(adView)
 
         populateNativeAd(
+            size = size,
             isMediumAd = isMediumAd || size == NativeAdSize.LARGE || size == NativeAdSize.MEDIUM,
             nativeAd = cachedAd,
             adView = adView,
@@ -360,6 +367,7 @@ object AdmobNativeAdManager {
     }
 
     private fun populateNativeAd(
+        size: NativeAdSize,
         isMediumAd: Boolean,
         nativeAd: NativeAd,
         adView: NativeAdView,
@@ -369,8 +377,14 @@ object AdmobNativeAdManager {
         adView.bodyView = adView.findViewById(R.id.adBody)
         adView.callToActionView = adView.findViewById(R.id.adCallToAction)
         adView.iconView = adView.findViewById(R.id.adAppIcon)
+        adView.advertiserView = adView.findViewById(R.id.adAdvertiser)
 
-        (adView.headlineView as? TextView)?.text = nativeAd.headline ?: ""
+        if (nativeAd.headline == null) {
+            adView.headlineView?.visibility = View.INVISIBLE
+        } else {
+            adView.headlineView?.visibility = View.VISIBLE
+            (adView.headlineView as? TextView)?.text = nativeAd.headline
+        }
 
         // Configure Body
         if (nativeAd.body == null) {
@@ -378,6 +392,18 @@ object AdmobNativeAdManager {
         } else {
             adView.bodyView?.visibility = View.VISIBLE
             (adView.bodyView as? TextView)?.text = nativeAd.body
+            adView.bodyView?.post {
+                adView.bodyView?.isSelected = true
+            }
+        }
+
+        // Configure Advertiser / Store (used in LARGE layout)
+        val advertiserText = nativeAd.advertiser ?: nativeAd.store
+        if (advertiserText.isNullOrEmpty()) {
+            adView.advertiserView?.visibility = View.GONE
+        } else {
+            adView.advertiserView?.visibility = View.VISIBLE
+            (adView.advertiserView as? TextView)?.text = advertiserText
         }
 
         // Configure Call to Action
@@ -388,8 +414,11 @@ object AdmobNativeAdManager {
             (adView.callToActionView as? TextView)?.text = nativeAd.callToAction
         }
 
-        // Configure Icon
-        if (nativeAd.icon == null) {
+        // Configure Icon (LARGE layout hides the app icon card by design)
+        if (size == NativeAdSize.LARGE) {
+            adView.findViewById<View>(R.id.adIconCard)?.visibility = View.GONE
+            adView.iconView?.visibility = View.GONE
+        } else if (nativeAd.icon == null) {
             handleIconVisibility(isMediumAd, adView, false)
         } else {
             handleIconVisibility(isMediumAd, adView, true)

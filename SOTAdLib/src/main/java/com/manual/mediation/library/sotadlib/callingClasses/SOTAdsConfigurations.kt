@@ -8,6 +8,7 @@ import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobInterstitialAdS
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobNativeAdManager
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobResumeAdSplash
 import com.manual.mediation.library.sotadlib.adMobAdClasses.NativeAdSize
+import com.manual.mediation.library.sotadlib.adMobAdClasses.PictureInPictureAdClass
 import com.manual.mediation.library.sotadlib.utils.NetworkCheck
 import com.manual.mediation.library.sotadlib.utils.PrefHelper
 import com.manual.mediation.library.sotadlib.utilsGoogleAdsConsent.ConsentConfigurations
@@ -44,6 +45,48 @@ class SOTAdsConfigurations private constructor() {
         return remoteConfigData?.get("${key}_SIZE")
             ?: remoteConfigData?.get("NATIVE_SIZE")
             ?: remoteConfigData?.get(key)
+    }
+
+    /**
+     * Checks whether a Picture-in-Picture (PiP) Ad slot is enabled in [remoteConfigData].
+     * Supports Boolean (`true`/`false`) and String (`"OFF"`, `"TRUE"`, `"TOP_LEFT"`, `"TOP_RIGHT"`, `"BOTTOM_LEFT"`, `"BOTTOM_RIGHT"`).
+     */
+    fun isPipAdEnabled(key: String): Boolean {
+        return PictureInPictureAdClass.isEnabled(
+            value = remoteConfigData?.get(key),
+            isPurchased = remoteConfigData?.get("IS_PURCHASED")
+        )
+    }
+
+    /**
+     * Resolves the PiP Ad position for [key] from [remoteConfigData].
+     * Looks up:
+     * 1. `"${key}_POSTION"` (e.g. `"PIP_WALKTHROUGH_1_POSTION"`)
+     * 2. `"${key}_POSITION"` (e.g. `"PIP_WALKTHROUGH_1_POSITION"`)
+     * 3. `"PIP_POSTION"` / `"PIP_POSITION"` (global fallback)
+     * 4. `[key]` itself (if passed directly as `"TOP_LEFT"`, `"TOP_RIGHT"`, `"BOTTOM_LEFT"`, `"BOTTOM_RIGHT"`)
+     */
+    fun getPipAdPosition(key: String): Any? {
+        return remoteConfigData?.get("${key}_POSTION")
+            ?: remoteConfigData?.get("${key}_POSITION")
+            ?: remoteConfigData?.get("PIP_POSTION")
+            ?: remoteConfigData?.get("PIP_POSITION")
+            ?: remoteConfigData?.get(key)
+    }
+
+    /**
+     * Resolves the AdMob PiP Ad Unit ID for [key] (e.g., `"PIP_WALKTHROUGH_1"`).
+     * Checks `"ADMOB_${key}"`, `[key]`, `"ADMOB_PIP"`, `"AD_ID_PIP"`, `"AD_ID_BANNER_PIP"`, and `"ADMOB_BANNER_SPLASH"`.
+     */
+    fun getPipAdId(key: String): String {
+        return firstOpenFlowAdIds["ADMOB_$key"]
+            ?: firstOpenFlowAdIds[key]
+            ?: firstOpenFlowAdIds["ADMOB_PIP"]
+            ?: firstOpenFlowAdIds["AD_ID_PIP"]
+            ?: firstOpenFlowAdIds["AD_ID_BANNER_PIP"]
+            ?: firstOpenFlowAdIds["ADMOB_PIP_WALKTHROUGH_1"]
+            ?: firstOpenFlowAdIds["ADMOB_BANNER_SPLASH"]
+            ?: ""
     }
 
     @RequiresApi(Build.VERSION_CODES.N)

@@ -14,6 +14,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.manual.mediation.library.sotadlib.R
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobNativeAdManager
+import com.manual.mediation.library.sotadlib.adMobAdClasses.PictureInPictureAdClass
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsConfigurations
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsManager
 import com.manual.mediation.library.sotadlib.data.WalkThroughItem
@@ -130,6 +131,9 @@ class WTTwoFragment : Fragment() {
         if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_3") == true) {
             loadAdmobWTThreeNatives()
         }
+        if (sotAdsConfigurations?.isPipAdEnabled("PIP_WALKTHROUGH_3") == true) {
+            loadAdmobWTThreePip()
+        }
     }
 
     override fun onResume() {
@@ -137,14 +141,28 @@ class WTTwoFragment : Fragment() {
         if (!NetworkCheck.isNetworkAvailable(context)) {
             binding.glOne.setGuidelinePercent(0.8f)
             binding.nativeAdContainerAd.visibility = View.GONE
+            PictureInPictureAdClass.destroyAd("PIP_WALKTHROUGH_2")
+            return
         }
 
         if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_2") == true) {
             binding.nativeAdContainerAd.visibility = View.VISIBLE
             showAdmobWTTwoNatives()
         } else {
+            binding.glOne.setGuidelinePercent(0.8f)
             binding.nativeAdContainerAd.visibility = View.GONE
         }
+
+        if (sotAdsConfigurations?.isPipAdEnabled("PIP_WALKTHROUGH_2") == true) {
+            showAdmobWTTwoPip()
+        } else {
+            PictureInPictureAdClass.destroyAd("PIP_WALKTHROUGH_2")
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        PictureInPictureAdClass.destroyAd("PIP_WALKTHROUGH_2")
     }
 
     private fun loadAdmobWTThreeNatives() {
@@ -162,6 +180,19 @@ class WTTwoFragment : Fragment() {
         } ?: Log.i("WTTwoFragment", "ADMOB_NATIVE_WALKTHROUGH_3 ad ID is missing.")
     }
 
+    private fun loadAdmobWTThreePip() {
+        val adId = sotAdsConfigurations?.getPipAdId("PIP_WALKTHROUGH_3") ?: ""
+        PictureInPictureAdClass.requestAd(
+            mContext = requireActivity(),
+            adId = adId,
+            adName = "PIP_WALKTHROUGH_3",
+            remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("PIP_WALKTHROUGH_3") ?: false,
+            pipPosition = sotAdsConfigurations?.getPipAdPosition("PIP_WALKTHROUGH_3"),
+            isPurchased = sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") ?: false,
+            populateView = false
+        )
+    }
+
     private fun showAdmobWTTwoNatives() {
         sotAdsConfigurations?.firstOpenFlowAdIds?.get("ADMOB_NATIVE_WALKTHROUGH_2")?.let { adId ->
             AdmobNativeAdManager.requestAd(
@@ -176,14 +207,36 @@ class WTTwoFragment : Fragment() {
                 requestAgain = false,
                 adContainer = binding.nativeAdContainerAd,
                 onAdFailed = {
+                    binding.glOne.setGuidelinePercent(0.8f)
                     binding.nativeAdContainerAd.visibility = View.GONE
                     Log.i("SOT_ADS_TAG", "WALKTHROUGH_2: Admob: onAdFailed()")
                 },
                 onAdLoaded = {
+                    binding.glOne.setGuidelinePercent(0.55f)
                     binding.nativeAdContainerAd.visibility = View.VISIBLE
                     Log.i("SOT_ADS_TAG", "WALKTHROUGH_2: Admob: onAdLoaded()")
                 }
             )
         } ?: Log.w("WTTwoFragment", "ADMOB_NATIVE_WALKTHROUGH_2 ad ID is missing.")
+    }
+
+    private fun showAdmobWTTwoPip() {
+        val adId = sotAdsConfigurations?.getPipAdId("PIP_WALKTHROUGH_2") ?: ""
+        PictureInPictureAdClass.requestAd(
+            mContext = requireActivity(),
+            adId = adId,
+            adName = "PIP_WALKTHROUGH_2",
+            remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("PIP_WALKTHROUGH_2") ?: true,
+            pipPosition = sotAdsConfigurations?.getPipAdPosition("PIP_WALKTHROUGH_2"),
+            isPurchased = sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") ?: false,
+            populateView = true,
+            requestAgain = true,
+            onAdFailed = {
+                Log.i("SOT_ADS_TAG", "PIP_WALKTHROUGH_2: Admob: onAdFailed()")
+            },
+            onAdLoaded = {
+                Log.i("SOT_ADS_TAG", "PIP_WALKTHROUGH_2: Admob: onAdLoaded()")
+            }
+        )
     }
 }

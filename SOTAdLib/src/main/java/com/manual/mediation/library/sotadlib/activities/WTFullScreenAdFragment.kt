@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.viewpager2.widget.ViewPager2
 import com.manual.mediation.library.sotadlib.R
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobNativeAdFullScreen
+import com.manual.mediation.library.sotadlib.adMobAdClasses.PictureInPictureAdClass
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsConfigurations
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsManager
 import com.manual.mediation.library.sotadlib.databinding.FragmentWalkThroughFullScreenAdmobBinding
@@ -69,6 +70,7 @@ class WTFullScreenAdFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        PictureInPictureAdClass.destroyActiveAd()
         binding.ivClose.visibility = View.GONE
         handler = Handler(Looper.getMainLooper())
 

@@ -10,6 +10,7 @@ import androidx.activity.addCallback
 import androidx.cardview.widget.CardView
 import com.manual.mediation.library.sotadlib.R
 import com.manual.mediation.library.sotadlib.adMobAdClasses.AdmobNativeAdManager
+import com.manual.mediation.library.sotadlib.adMobAdClasses.PictureInPictureAdClass
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsConfigurations
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsManager
 import com.manual.mediation.library.sotadlib.callingClasses.WelcomeScreensConfiguration
@@ -46,6 +47,9 @@ class WelcomeScreenOne : AppCompatBaseActivity(), WelcomeInterface {
 
         if (sotAdsConfigurations?.isNativeAdEnabled("NATIVE_WALKTHROUGH_1") == true) {
             loadAdmobWTOneNatives()
+        }
+        if (sotAdsConfigurations?.isPipAdEnabled("PIP_WALKTHROUGH_1") == true) {
+            loadAdmobWTOnePip()
         }
     }
 
@@ -119,5 +123,18 @@ class WelcomeScreenOne : AppCompatBaseActivity(), WelcomeInterface {
         } else {
             Log.e("SOT_ADS_TAG", "Admob ad ID not found for WALKTHROUGH_1")
         }
+    }
+
+    private fun loadAdmobWTOnePip() {
+        val adId = sotAdsConfigurations?.getPipAdId("PIP_WALKTHROUGH_1") ?: ""
+        PictureInPictureAdClass.requestAd(
+            mContext = this,
+            adId = adId,
+            adName = "PIP_WALKTHROUGH_1",
+            remoteConfig = sotAdsConfigurations?.getRemoteConfigData()?.get("PIP_WALKTHROUGH_1") ?: false,
+            pipPosition = sotAdsConfigurations?.getPipAdPosition("PIP_WALKTHROUGH_1"),
+            isPurchased = sotAdsConfigurations?.getRemoteConfigData()?.get("IS_PURCHASED") ?: false,
+            populateView = false
+        )
     }
 }

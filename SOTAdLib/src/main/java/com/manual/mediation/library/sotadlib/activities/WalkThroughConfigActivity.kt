@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.addCallback
 import androidx.viewpager2.widget.ViewPager2
+import com.manual.mediation.library.sotadlib.adMobAdClasses.PictureInPictureAdClass
 import com.manual.mediation.library.sotadlib.adapters.WalkThroughAdapter
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsConfigurations
 import com.manual.mediation.library.sotadlib.callingClasses.SOTAdsManager
@@ -101,5 +102,10 @@ class WalkThroughConfigActivity : AppCompatBaseActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         hideSystemUIUpdated()
+    }
+
+    override fun onDestroy() {
+        PictureInPictureAdClass.clearAdCache()
+        super.onDestroy()
     }
 }

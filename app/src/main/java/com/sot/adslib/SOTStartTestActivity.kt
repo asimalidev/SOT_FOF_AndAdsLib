@@ -65,6 +65,9 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
             this["ADMOB_NATIVE_WALKTHROUGH_2"] = "ca-app-pub-3940256099942544/2247696110"
             this["ADMOB_NATIVE_WALKTHROUGH_FULLSCR"] = "ca-app-pub-3940256099942544/2247696110"
             this["ADMOB_NATIVE_WALKTHROUGH_3"] = "ca-app-pub-3940256099942544/2247696110"
+            this["ADMOB_PIP_WALKTHROUGH_1"] = "ca-app-pub-3940256099942544/9214589741"
+            this["ADMOB_PIP_WALKTHROUGH_2"] = "ca-app-pub-3940256099942544/9214589741"
+            this["ADMOB_PIP_WALKTHROUGH_3"] = "ca-app-pub-3940256099942544/9214589741"
             this["ADMOB_INTERSTITIAL_LETS_START"] = "ca-app-pub-3940256099942544/1033173712"
         }
 
@@ -436,6 +439,12 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
         editor.putBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_FULLSCR, true)
         editor.putBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_3, true)
         editor.putString(RemoteConfigConstTest.NATIVE_WALKTHROUGH_3_SIZE, "LARGE")
+        editor.putBoolean(RemoteConfigConstTest.PIP_WALKTHROUGH_1, true)
+        editor.putString(RemoteConfigConstTest.PIP_WALKTHROUGH_1_POSTION, "TOP_RIGHT")
+        editor.putBoolean(RemoteConfigConstTest.PIP_WALKTHROUGH_2, true)
+        editor.putString(RemoteConfigConstTest.PIP_WALKTHROUGH_2_POSTION, "TOP_LEFT")
+        editor.putBoolean(RemoteConfigConstTest.PIP_WALKTHROUGH_3, true)
+        editor.putString(RemoteConfigConstTest.PIP_WALKTHROUGH_3_POSTION, "TOP_RIGHT")
         editor.putBoolean(RemoteConfigConstTest.INTERSTITIAL_LETS_START, true)
         editor.putString(RemoteConfigConstTest.TIMER_NATIVE_F_SRC, "5")
         editor.putString(RemoteConfigConstTest.DELAY_TO_SHOW_LANGUAGE_DONE, "2000")
@@ -483,6 +492,18 @@ class SOTStartTestActivity : AppCompatBaseActivity() {
                 prefs.getBoolean(RemoteConfigConstTest.NATIVE_WALKTHROUGH_3, false)
             this["NATIVE_WALKTHROUGH_3_SIZE"] =
                 "${prefs.getString(RemoteConfigConstTest.NATIVE_WALKTHROUGH_3_SIZE, "LARGE")}"
+            this["PIP_WALKTHROUGH_1"] =
+                prefs.getBoolean(RemoteConfigConstTest.PIP_WALKTHROUGH_1, false)
+            this["PIP_WALKTHROUGH_1_POSTION"] =
+                "${prefs.getString(RemoteConfigConstTest.PIP_WALKTHROUGH_1_POSTION, "BOTTOM_RIGHT")}"
+            this["PIP_WALKTHROUGH_2"] =
+                prefs.getBoolean(RemoteConfigConstTest.PIP_WALKTHROUGH_2, false)
+            this["PIP_WALKTHROUGH_2_POSTION"] =
+                "${prefs.getString(RemoteConfigConstTest.PIP_WALKTHROUGH_2_POSTION, "BOTTOM_RIGHT")}"
+            this["PIP_WALKTHROUGH_3"] =
+                prefs.getBoolean(RemoteConfigConstTest.PIP_WALKTHROUGH_3, false)
+            this["PIP_WALKTHROUGH_3_POSTION"] =
+                "${prefs.getString(RemoteConfigConstTest.PIP_WALKTHROUGH_3_POSTION, "BOTTOM_RIGHT")}"
             this["INTERSTITIAL_LETS_START"] =
                 prefs.getBoolean(RemoteConfigConstTest.INTERSTITIAL_LETS_START, false)
             this["TIMER_NATIVE_F_SRC"] =
