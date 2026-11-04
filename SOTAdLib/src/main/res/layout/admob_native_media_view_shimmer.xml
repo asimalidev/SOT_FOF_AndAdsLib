@@ -11,7 +11,7 @@
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
-        android:layout_height="136dp"
+        android:layout_height="180dp"
         app:cardBackgroundColor="#D9D9D9"
         app:cardCornerRadius="12dp"
         app:cardElevation="0dp">
@@ -50,9 +50,11 @@
         android:background="@drawable/bg_shimmer_block" />
 
     <View
-        android:layout_width="115dp"
-        android:layout_height="36dp"
-        android:layout_marginTop="6dp"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
         android:layout_marginBottom="1dp"
         android:background="@drawable/bg_shimmer_large_cta" />
 

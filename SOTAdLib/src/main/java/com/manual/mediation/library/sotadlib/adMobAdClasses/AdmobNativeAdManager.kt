@@ -201,8 +201,11 @@ object AdmobNativeAdManager {
             .setStartMuted(true)
             .build()
 
+        // Note: Never use BOTTOM_RIGHT / BOTTOM_LEFT inside a wrap_content NativeAdView because
+        // GMA Next-Gen SDK's internal AdChoicesView (RelativeLayout) adds ALIGN_PARENT_BOTTOM,
+        // which causes RelativeLayout.onMeasure to expand to the full AT_MOST screen height.
         val adChoicesPlacement = if (resolvedSize == NativeAdSize.LARGE) {
-            AdChoicesPlacement.BOTTOM_RIGHT
+            AdChoicesPlacement.TOP_LEFT
         } else {
             AdChoicesPlacement.TOP_RIGHT
         }
